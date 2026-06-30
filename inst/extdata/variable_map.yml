@@ -1,0 +1,87 @@
+
+# Each variable has:
+#   colnames : exact matches (after clean_names normalization)
+#   keywords : partial word patterns used for intelligent prediction, at least 3 words
+#   type     : target R type
+#   label    : variable description
+#   value    : optional value labels for categorical variable
+#   recode   : optional value remapping
+#   missing  : values for missing (not evaluated yet)
+
+
+kjonn:
+  colnames: [Kjonn]
+  keywords: [kjonn, sex, gender]
+  type: integer
+  label: "IOs kjønn"
+  value:
+    1: "Mann"
+    2: "Kvinne"
+  recode:
+    "0": 2
+    "1": 1
+    "2": 2
+  missing:
+    - NA
+
+alder:
+  colnames: [Alder]
+  keywords: [alder, age, ageyrs]
+  type: integer
+  label: "IOs alder"
+  value: ~
+  recode: ~
+  missing:
+    - NA
+
+yrkesstatus:
+  colnames: [Yrkesstatus]
+  keywords: [yrkesstatus]
+  type: integer
+  label: "Er du yrkesaktiv?"
+  value:
+    1: "Ja"
+    2: "Nei"
+    8: "ikke svar"
+    9: "vet ikke"
+  recode: ~
+  missing:
+    - 8
+    - 9
+
+siv:
+  colnames: [Siv]
+  keywords: [siv]
+  type: integer
+  label: "Er du gift eller samboer?"
+  value:
+    1: "Ja, gift/registrert partner"
+    2: "Ja, samboer"
+    3: "Nei"
+  recode: ~
+  missing:
+    - 8
+    - 9
+
+antpers:
+  colnames: [Antpers]
+  keywords: [antpers]
+  type: integer
+  label: "Antall medlemmer i husholdningen?"
+  value: ~
+  recode: ~
+  missing:
+    - NA
+    - 99
+
+tob1:
+  colnames: [Tob1]
+  keywords: [tob1]
+  type: integer
+  label: "Hender at røyker"
+  value:
+    1: "Ja"
+    2: "Nei"
+  recode: ~
+  missing:
+

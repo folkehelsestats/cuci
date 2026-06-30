@@ -1,0 +1,23 @@
+---
+output:
+  github_document:
+    html_preview: false
+knitr:
+  opts_chunk:
+    eval: false
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/img/README-",
+  out.width = "100%"
+)
+```
+
+# cuci 
+
+**cuci** is an R package for cleaning and standardize dataset.
