@@ -27,8 +27,7 @@
 #'   year_tag = 2023L
 #' )
 #' result <- run_pipeline(manifest, config_file = system.file(
-#'   "extdata", "variable_map.yml", package = "cuci"
-#' ))
+#'   "extdata", "variable_map.yml"))
 #' result
 #' }
 #'

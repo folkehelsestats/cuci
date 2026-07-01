@@ -124,20 +124,20 @@ match_columns <- function(raw_colnames, config, fuzzy_max_distance = 0.15) {
       if (grepl(pattern, col, ignore.case = TRUE, perl = TRUE)) {
         matched_canonical <- canonical
 
-        keywords  <- unlist(strsplit(pattern, "\\|"))
-        keywords  <- gsub("^\\\\b\\(|\\)\\\\b$", "", keywords)
-        keywords  <- trimws(keywords)
-        keywords  <- keywords[nchar(keywords) >= 3]
+        # Use plain keywords from the var_map for display (not the regex string)
+        # so we avoid parsing lookahead/lookbehind fragments.
+        plain_kws <- as.character(config$var_map[[canonical]]$keywords)
+        plain_kws <- plain_kws[!is.na(plain_kws) & nchar(plain_kws) >= 3]
 
         hit_flags <- vapply(
-          keywords,
-          function(kw) grepl(kw, col, ignore.case = TRUE),
+          plain_kws,
+          function(kw) grepl(kw, col, ignore.case = TRUE, fixed = TRUE),
           logical(1)
         )
 
-        matching_kws    <- keywords[hit_flags]
+        matching_kws    <- plain_kws[hit_flags]
         matched_keyword <- if (length(matching_kws) == 0) {
-          pattern
+          "(pattern)"
         } else {
           matching_kws[which.max(nchar(matching_kws))]
         }
@@ -278,7 +278,10 @@ build_keyword_patterns <- function(config, min_char = 3) {
     # Escape regex special characters
     keywords <- gsub("([.^$*+?()\\[{\\\\|])", "\\\\\\1", keywords)
 
-    paste0("\\b(", paste(unique(keywords), collapse = "|"), ")\\b")
+    # Use (?<![a-z0-9]) / (?![a-z0-9]) instead of \b so that keywords
+    # embedded after underscores (e.g. "io_kjonn") are still matched.
+    # Plain \b treats "_" as a word char, which breaks "io_kjonn" vs "kjonn".
+    paste0("(?<![a-z0-9])(", paste(unique(keywords), collapse = "|"), ")(?![a-z0-9])")
   })
 
   keyword_patterns[!vapply(keyword_patterns, is.null, logical(1))]

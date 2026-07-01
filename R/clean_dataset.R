@@ -1,4 +1,4 @@
-#' Clean and standardize a raw dataset
+#' Clean and standardize a raw survey dataset
 #'
 #' Applies the full standardization pipeline to a single raw dataset:
 #' column-name normalization, intelligent matching, renaming, recoding,
@@ -50,7 +50,7 @@ clean_dataset <- function(dt,
                           apply_missing = FALSE) {
 
   dt <- data.table::copy(data.table::as.data.table(dt))
-  
+
   # Accumulate issues across all variables
   issue_log <- list()
 
@@ -113,7 +113,7 @@ clean_dataset <- function(dt,
     converted <- .safe_coerce(original, target_type)
 
     if (is.null(converted)) {
-      # Unsupported type spec - skip
+      # Unsupported type spec — skip
       issue_log[[length(issue_log) + 1]] <- data.table::data.table(
         variable   = var,
         issue_type = "coercion_skip",
