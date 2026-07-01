@@ -33,10 +33,10 @@ validate_dataset <- function(dt, config = NULL, dataset_label = "") {
   cat(sprintf("  Columns : %s\n\n", paste(names(dt), collapse = ", ")))
 
   # --- Missingness per column -------------------------------------------
-  cat("  Missingness per column:\n")
+  cat("  Missingness per column: (arrow <-- indicates HIGH missing)\n")
   for (col in names(dt)) {
     pct <- round(mean(is.na(dt[[col]])) * 100, 1)
-    flag <- if (pct > 50) "  <-- HIGH" else ""
+    flag <- if (pct > 50) "  <-- " else ""
     cat(sprintf("    %-20s %s%%%s\n", col, pct, flag))
   }
 
