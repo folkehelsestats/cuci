@@ -374,9 +374,12 @@ print_match_report <- function(match_result, dataset_label = "") {
     return(invisible())
   }
 
-  cat(sprintf("\n\u2554%s\u2557\n", strrep("\u2550", 54)))
-  cat(sprintf("  Column Matching Report: %s\n", dataset_label))
-  cat(sprintf("\u255a%s\u255d\n", strrep("\u2550", 54)))
+  charLab <- sprintf("  Column Matching Report: %s\n", dataset_label)
+  nlab <- nchar(charLab) + 2
+  
+  cat(sprintf("\n\u2554%s\u2557\n", strrep("\u2550", nlab)))
+  cat(charLab)
+  cat(sprintf("\u255a%s\u255d\n", strrep("\u2550", nlab)))
 
   exact <- log[log$method == "exact", ]
   if (nrow(exact) > 0) {

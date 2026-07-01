@@ -123,9 +123,11 @@ summarise_master_log <- function(log_dir = "logs/matching") {
 
   master_dt <- data.table::fread(master_path)
 
-  cat(sprintf("\n\u2554%s\u2557\n", strrep("\u2550", 54)))
+  
+  
+  cat(sprintf("\n\u2554%s\u2557\n", strrep("\u2550", 47)))
   cat("  MASTER AUDIT SUMMARY \u2014 All Datasets\n")
-  cat(sprintf("\u255a%s\u255d\n", strrep("\u2550", 54)))
+  cat(sprintf("\u255a%s\u255d\n", strrep("\u2550", 47)))
 
   cat("\n  Decisions by match method (all datasets):\n")
   method_summary <- master_dt[, .N, by = method][order(-N)]
