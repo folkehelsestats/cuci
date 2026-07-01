@@ -31,7 +31,7 @@
 #' @param raw_name     The column name as it appears in the raw dataset.
 #' @param canonical    The canonical variable name it maps to.
 #' @param method       Free-text method label ("exact", "fuzzy", or
-#'                     "keyword [\"word\"]").
+#'                     "keyword [word]").
 #' @param confidence   One of "high", "medium", or "low".
 #' @param needs_review Logical - should a human verify this decision?
 #'
@@ -231,7 +231,7 @@
     rows[[length(rows) + 1]] <- .build_match_row(
       raw_name     = col,
       canonical    = matched_canonical,
-      method       = sprintf('keyword ["%s"]', matched_kw_label),
+      method       = sprintf("keyword [%s]", matched_kw_label),
       confidence   = "low",
       needs_review = TRUE
     )
