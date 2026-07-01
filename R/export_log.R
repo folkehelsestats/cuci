@@ -327,7 +327,6 @@ summarise_master_log <- function(log_dir = "logs/matching") {
     return(invisible(NULL))
   }
 
-  master_dt <- data.table::fread(master_path)
   master_dt <- data.table::fread(master_path, quote = "")
   cat(sprintf("\n\u2554%s\u2557\n", strrep("\u2550", 54)))
   cat("  MASTER AUDIT SUMMARY \u2014 All Datasets\n")
