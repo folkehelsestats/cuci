@@ -32,8 +32,14 @@
 .ensure_log_dir <- function(log_dir) {
   if (!dir.exists(log_dir)) {
     dir.create(log_dir, recursive = TRUE)
-    message(sprintf("Created log directory: %s", log_dir))
   }
+  # Resolve to the absolute path now that the directory exists.
+  # normalizePath() requires the path to exist, so this must run after
+  # dir.create(). On Windows this expands to e.g. "C:/My Documents/logs".
+  # winslash = "/" keeps separators consistent across platforms.
+  abs_path <- normalizePath(log_dir, winslash = "/", mustWork = TRUE)
+  message(sprintf("Log directory: %s", abs_path))
+  invisible(abs_path)
 }
 
 
@@ -274,8 +280,10 @@ export_match_log <- function(match_result,
                              log_dir       = "logs/matching",
                              append_master = TRUE) {
 
-  # 1. Make sure the target directory exists
-  .ensure_log_dir(log_dir)
+  # 1. Ensure directory exists and resolve to its absolute path.
+  #    Every subsequent helper uses abs_log_dir so messages always show
+  #    the full path (e.g. C:/My Documents/logs/match_log_x.csv).
+  abs_log_dir <- .ensure_log_dir(log_dir)
 
   # 2. Start from the match log; add rows for unmatched columns
   log_dt <- .add_unmatched_rows(match_result$match_log, match_result)
@@ -290,14 +298,14 @@ export_match_log <- function(match_result,
   .reorder_log_cols(log_dt)
 
   # 6. Write the per-dataset match log
-  .write_per_dataset_log(log_dt, log_dir, dataset_label)
+  .write_per_dataset_log(log_dt, abs_log_dir, dataset_label)
 
   # 7. Write the issues log (coercion failures, unexpected values)
-  .write_issues_log(issues_dt, log_dir, dataset_label, year_tag)
+  .write_issues_log(issues_dt, abs_log_dir, dataset_label, year_tag)
 
   # 8. Merge into the master log
   if (append_master)
-    .update_master_log(log_dt, log_dir, dataset_label)
+    .update_master_log(log_dt, abs_log_dir, dataset_label)
 
   invisible(log_dt)
 }
@@ -320,7 +328,9 @@ export_match_log <- function(match_result,
 #' @export
 summarise_master_log <- function(log_dir = "logs/matching") {
 
-  master_path <- file.path(log_dir, "match_log_MASTER.csv")
+  # Resolve to absolute path so the "not found" message shows the full location
+  abs_log_dir <- normalizePath(log_dir, winslash = "/", mustWork = FALSE)
+  master_path <- file.path(abs_log_dir, "match_log_MASTER.csv")
 
   if (!file.exists(master_path)) {
     message("No master log found at: ", master_path)
