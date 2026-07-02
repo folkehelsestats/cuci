@@ -3,10 +3,10 @@
 #
 # Top-level orchestration for the cuci cleaning pipeline.
 #
-# Public API (exported):
+# Public API:
 #   run_pipeline()      - process a file manifest through the full pipeline
 #
-# Internal helpers (not exported, prefixed with `.`):
+# Internal helpers:
 #   .read_raw_file()    - read CSV / TSV / XLSX into a data.table
 #   .process_one_file() - clean + validate one file, return result list
 #   .merge_datasets()   - stack cleaned data.tables into one master table

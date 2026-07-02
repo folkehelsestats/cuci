@@ -407,7 +407,17 @@ print_match_report <- function(match_result, dataset_label = "") {
   if (length(match_result$unmatched) > 0) {
     cat(sprintf("\n  \u2716 UNMATCHED COLUMNS \u2014 not included in output (%d):\n",
                 length(match_result$unmatched)))
-    cat(sprintf("    %s\n", paste(match_result$unmatched, collapse = ", ")))
+
+    # Split into groups of 5
+    chunks <- split(
+      match_result$unmatched,
+      ceiling(seq_along(match_result$unmatched) / 5)
+    )
+
+    # Print one line per chunk
+    cat(sprintf("    %s\n", sapply(chunks, paste, collapse = ", ")))
+    
+    # cat(sprintf("    %s\n", paste(match_result$unmatched, collapse = ", ")))
     cat("    \u2192 Consider adding these to your variable_map.yml\n")
   }
 
