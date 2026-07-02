@@ -1,0 +1,685 @@
+---
+title: "Introduction to cuci"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Introduction to cuci}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse  = TRUE,
+  comment   = "#>",
+  eval      = FALSE
+)
+```
+
+## What cuci does
+
+Survey datasets collected over multiple years rarely arrive with identical
+column names, value codings, or file formats. **cuci** (Clean and Unify
+Collected Information) solves this by letting you declare — once, in a YAML
+file — what every variable should look like: its canonical name, expected
+column aliases, target data type, valid values, recode rules, and missing-value
+codes. The package then applies that declaration consistently to every raw file
+you give it.
+
+The core idea is that **the YAML is the specification and R is the executor**.
+You spend your time editing the YAML; cuci does the mechanical work.
+
+---
+
+## Package architecture
+
+cuci is built as a chain of small, single-purpose functions. Understanding the
+chain makes it easy to know which function to call when you do not want to run
+the whole pipeline.
+
+```
+load_config()          Read and parse variable_map.yml into R
+      |
+      v
+match_columns()        Map raw column names to canonical names (3 layers)
+      |
+      v
+clean_dataset()        Recode, coerce, validate one dataset
+      |
+      v
+validate_dataset()     Print a post-clean quality report
+      |
+      v
+export_match_log()     Write audit CSVs for the decisions just made
+      |
+      v
+run_pipeline()         Orchestrates all of the above for a list of files
+```
+
+Every step in this chain is also a standalone exported function you can call
+directly. The sections below show both the full pipeline and each function on
+its own.
+
+---
+
+## 1. The variable map YAML
+
+Everything starts with a YAML file that describes your target dataset. Each
+top-level key is the canonical name of a variable — the name it will have in
+the cleaned output, regardless of what it was called in the raw file.
+
+```yaml
+# variable_map.yml
+
+kjonn:
+  colnames: [Kjonn, IO_Kjonn, gender_var]    # known aliases in raw files
+  keywords: [kjonn, sex, gender]             # fallback keywords for prediction
+  type: integer                              # target R type after cleaning
+  label: "Respondentens kjønn"
+  value:                                     # complete set of valid values
+    1: "Mann"
+    2: "Kvinne"
+  recode:                                    # map old codes -> standard codes
+    "0": 2
+    "1": 1
+  missing:                                   # codes that mean "no answer"
+    - 8
+    - 9
+
+alder:
+  colnames: [Alder, age_yrs]
+  keywords: [alder, age, ageyrs]
+  type: integer
+  label: "Alder i år"
+  value: ~                                   # ~ means no value constraint
+  recode: ~
+  missing:
+    - NA
+    - 99
+```
+
+**`colnames`** lists every name this variable might have in a raw file.
+Matching against this list is always tried first (exact match), and is the
+most reliable layer.
+
+**`keywords`** are used as a fallback when no exact match is found. The
+package builds a regex from these words and tests it against unrecognised
+column names. A keyword match is always flagged for human review because it
+is a prediction, not a certainty.
+
+**`type`** is the R type the column should have after cleaning. If a column
+cannot be safely converted (e.g. it contains `"D"` and the target type is
+`integer`) the column is left unchanged and the problem is recorded in the
+issues table — no silent data loss.
+
+**`value`** declares the complete set of valid integer codes. Any code found
+in the data that is not in this list triggers a warning and is recorded as an
+issue. The values are not removed; that decision belongs to the analyst.
+
+**`recode`** maps old codes to standard ones before type coercion runs. Keys
+are always strings (matching the raw string representation of the cell),
+values are integers. Use this when older survey versions used `0/1/2` where
+the standard is `1/2`.
+
+**`missing`** lists codes that should be recoded to `NA`. This step is
+**opt-in** (`apply_missing = TRUE`) because silently turning plausible
+integers like `8` or `9` into `NA` can hide real problems. Declare the
+missing codes in the YAML so the intent is documented, and decide at
+pipeline-run time whether to apply them.
+
+---
+
+## 2. Full pipeline — `run_pipeline()`
+
+`run_pipeline()` is the entry point for routine processing. Give it a
+manifest table (one row per file) and it reads, matches, cleans, validates,
+and logs everything in sequence.
+
+```{r}
+library(cuci)
+library(data.table)
+
+# Build a manifest: one row per raw survey file
+manifest <- data.table(
+  path     = c(
+    "data/raw/survey_2022.csv",
+    "data/raw/survey_2023.csv",
+    "data/raw/survey_2024.csv"
+  ),
+  year_tag = c(2022L, 2023L, 2024L)
+)
+
+# merge = FALSE (default): returns a named list, one data.table per file
+results <- run_pipeline(
+  file_manifest = manifest,
+  config_file   = "config/variable_map.yml",
+  log_dir       = "logs/matching",
+  output_path   = "data/clean",       # directory: writes one CSV per file
+  apply_missing = FALSE,
+  merge         = FALSE
+)
+
+# Access individual years
+results[["survey_2022.csv"]]
+results[["survey_2023.csv"]]
+```
+
+### Merging into one master dataset
+
+When you want all years stacked into a single table:
+
+```{r}
+master <- run_pipeline(
+  file_manifest = manifest,
+  config_file   = "config/variable_map.yml",
+  log_dir       = "logs/matching",
+  output_path   = "data/clean/master.csv",  # file path, not directory
+  merge         = TRUE
+)
+
+# master is a single data.table with a 'year' column as the first column
+head(master)
+```
+
+Columns that exist in some years but not others are padded with `NA` so the
+stack always works. `year` is moved to the first column automatically.
+
+---
+
+## 3. Using functions individually
+
+`run_pipeline()` is convenient for routine work, but every step is also an
+exported function you can call on its own. You would do this when:
+
+- **Exploring a new dataset** before committing to a full pipeline run.
+- **Debugging** a specific step without re-running the whole chain.
+- **Building a custom workflow** that needs only some of the steps (e.g. you
+  already have cleaned data but want the audit log, or you want to check
+  column matching without writing any files).
+- **Testing a new variable_map.yml** entry before rolling it out to all files.
+
+The sections below show each function individually and explain when reaching
+for it directly makes sense.
+
+---
+
+### 3.1 `load_config()` — parse the YAML once
+
+```{r}
+config <- load_config("config/variable_map.yml")
+```
+
+`load_config()` reads the YAML file and builds seven lookup structures from
+it. The result is a plain R list you can inspect interactively at any time.
+
+```{r}
+# What variables are defined?
+names(config$var_map)
+#> [1] "kjonn"       "alder"       "yrkesstatus" "siv"         "antpers"
+#> [6] "tob1"
+
+# What type is each variable expected to be?
+config$type_map
+#>       kjonn       alder yrkesstatus         siv     antpers        tob1
+#>   "integer"   "integer"   "integer"   "integer"   "integer"   "integer"
+
+# What are the valid values for kjonn?
+config$value_map$kjonn
+#>    num_value chr_value
+#> 1:         1      Mann
+#> 2:         2    Kvinne
+
+# What are the recode rules for kjonn?
+config$recode_map$kjonn
+#>    raw_value new_value
+#> 1:         0         2
+#> 2:         1         1
+#> 3:         2         2
+
+# What column aliases are recognised for kjonn?
+names(config$name_lookup)[config$name_lookup == "kjonn"]
+#> [1] "Kjonn"    "kjonn"    "IO_Kjonn" "io_kjonn"
+```
+
+**When to call directly:** every time you want to examine or verify your
+variable map. Also useful in testing: load the config once and pass it to
+multiple test cases without re-reading the YAML each time.
+
+---
+
+### 3.2 `match_columns()` — test column name matching
+
+`match_columns()` takes a character vector of column names (as they appear in
+a raw file after normalisation) and returns a matching decision for each one.
+
+```{r}
+library(data.table)
+
+# Read a raw file and normalise its column names
+raw <- fread("data/raw/survey_2023.csv")
+
+# See what names the file actually has
+names(raw)
+#> [1] "IO_Kjonn"    "Alder"       "Yrkesstatus" "Siv"         "Antpers"
+#> [6] "Tob1"
+
+# Run matching directly to inspect decisions before cleaning
+result <- match_columns(
+  raw_colnames = tolower(names(raw)),   # simulate normalisation
+  config       = config
+)
+
+# What was matched, and how?
+result$match_log
+#>       raw_name   canonical           method confidence needs_review
+#> 1:   io_kjonn       kjonn  keyword [kjonn]        low         TRUE
+#> 2:       alder       alder            exact       high        FALSE
+#> 3: yrkesstatus yrkesstatus            exact       high        FALSE
+#> 4:         siv         siv            exact       high        FALSE
+#> 5:     antpers     antpers            exact       high        FALSE
+#> 6:        tob1        tob1            exact       high        FALSE
+
+# What was the rename map? (old name -> canonical name)
+result$rename_vec
+#>  io_kjonn
+#>   "kjonn"
+
+# What could not be matched at all?
+result$unmatched
+#> character(0)
+```
+
+The match is done in three layers:
+
+1. **Exact** — the column name is a known alias in the YAML `colnames:` list.
+   Confidence: high. No review needed.
+2. **Fuzzy** — the column name is close to a known alias by edit distance
+   (catches typos). Confidence: medium. Flagged for review.
+3. **Keyword** — the column name contains one of the `keywords:` from the
+   YAML. Confidence: low. Always flagged for review because it is a
+   prediction, not a guaranteed match.
+
+**When to call directly:** whenever you receive a new file with unfamiliar
+column names and want to see what the package will do before committing to a
+full run. The `match_log` and `print_match_report()` output tell you
+immediately which columns need attention in the YAML.
+
+```{r}
+# Pretty-print the matching decisions to the console
+print_match_report(result, dataset_label = "survey_2023.csv")
+```
+
+---
+
+### 3.3 `clean_dataset()` — clean one dataset
+
+`clean_dataset()` takes a raw `data.table` and a config, and returns a list
+with two elements: the cleaned data and an issues table.
+
+```{r}
+raw <- fread("data/raw/survey_2023.csv")
+
+out <- clean_dataset(
+  dt            = raw,
+  config        = config,
+  year_tag      = 2023L,
+  dataset_label = "survey_2023.csv",
+  apply_missing = FALSE              # keep 8/9 as integers for now
+)
+
+# The cleaned data.table
+out$data
+#>     year kjonn alder yrkesstatus siv antpers tob1
+#>  1: 2023     2    75           2   3       1    2
+#>  ...
+
+# The issues table — one row per problem found
+out$issues
+#>    variable    issue_type                                  detail
+#> 1:      siv coerce_failure  Target: integer. 1 value(s) -> NA: D...
+#> 2:     tob1 unexpected_values  Values not declared in YAML: 8, 9...
+```
+
+`clean_dataset()` never silently corrupts data. If a column cannot be
+converted to its declared type without introducing new `NA` values, it is
+left at its original type and the problem is recorded in `out$issues`. Check
+this table before saving the cleaned data.
+
+**When to call directly:** when processing a single file in an exploratory or
+interactive session, or when you want to inspect the issues before deciding
+whether to write the output. The issues table is the primary tool for
+understanding what the YAML needs to be updated to handle.
+
+```{r}
+# Workflow: clean interactively, inspect issues, update YAML, repeat
+out <- clean_dataset(raw, config, year_tag = 2023L, dataset_label = "survey_2023.csv")
+
+if (nrow(out$issues) > 0) {
+  print(out$issues)
+  # Fix variable_map.yml, reload config, try again
+}
+```
+
+---
+
+### 3.4 `validate_dataset()` — check the cleaned result
+
+`validate_dataset()` prints a structured report about a cleaned dataset:
+row count, column names, missingness per column, and any values that are
+present in the data but not declared in the YAML `value:` blocks.
+
+```{r}
+validate_dataset(out$data, config, dataset_label = "survey_2023.csv")
+#>
+#> ================================================
+#>  Validation Report: survey_2023.csv
+#> ================================================
+#>   Rows    : 20
+#>   Columns : year, kjonn, alder, yrkesstatus, siv, antpers, tob1
+#>
+#>   Missingness per column: (<-- HIGH indicates >50% missing)
+#>     year                 0%
+#>     kjonn                0%
+#>     alder                0%
+#>     yrkesstatus          0%
+#>     siv                  5%
+#>     antpers              0%
+#>     tob1                 0%
+#>
+#>   Value conformance issues:
+#>     ⚠ tob1                 unexpected: 8, 9           valid: 1, 2
+#> ================================================
+```
+
+The function returns the data invisibly, so it can be placed inline in a
+pipeline without breaking the chain.
+
+```{r}
+# Inline use: validate and immediately assign
+cleaned <- clean_dataset(raw, config, year_tag = 2023L) |>
+  (\(x) { validate_dataset(x$data, config); x$data })()
+```
+
+**When to call directly:** after `clean_dataset()` when you want a summary
+before saving. Also useful when loading an already-cleaned CSV from disk and
+want to verify it still conforms to the current YAML (e.g. after updating
+the variable map).
+
+```{r}
+# Check an already-cleaned file against the current YAML
+existing <- fread("data/clean/survey_2023_clean.csv")
+validate_dataset(existing, config, "survey_2023_clean.csv")
+```
+
+---
+
+### 3.5 `export_match_log()` — write audit logs without running the pipeline
+
+`export_match_log()` writes three CSV files from the result of
+`match_columns()`:
+
+- `match_log_<dataset>.csv` — every column from the raw file, what it was
+  matched to, by which method, and whether it needs review.
+- `issues_<dataset>.csv` — coercion failures and unexpected values from
+  `clean_dataset()`. Only written if there are issues.
+- `match_log_MASTER.csv` — a single file that accumulates rows from all
+  datasets, updated on every call. Re-processing the same dataset replaces
+  its old rows rather than duplicating them.
+
+```{r}
+raw <- fread("data/raw/survey_2023.csv")
+
+# Step 1: match column names
+match_result <- match_columns(
+  raw_colnames = tolower(names(raw)),
+  config       = config
+)
+
+# Step 2: clean (to get the issues table)
+out <- clean_dataset(raw, config, year_tag = 2023L, dataset_label = "survey_2023.csv")
+
+# Step 3: write all log files
+export_match_log(
+  match_result  = match_result,
+  issues_dt     = out$issues,
+  dataset_label = "survey_2023.csv",
+  year_tag      = 2023L,
+  log_dir       = "logs/matching",
+  append_master = TRUE
+)
+#> Log directory: C:/Projects/survey/logs/matching
+#>   Match log saved: C:/Projects/survey/logs/matching/match_log_survey_2023_csv.csv
+#>   Issues log saved: C:/Projects/survey/logs/matching/issues_survey_2023_csv.csv
+#>   Master log updated: C:/Projects/survey/logs/matching/match_log_MASTER.csv (6 total decisions)
+```
+
+**When to call directly:** when you have already cleaned a dataset
+interactively and now want to produce the audit trail for it without
+re-running the full pipeline. Also useful when you want to log matching
+decisions from an exploratory `match_columns()` call — just pass
+`issues_dt = NULL` to skip the issues log.
+
+```{r}
+# Log matching decisions only, no issues table
+export_match_log(
+  match_result  = match_result,
+  issues_dt     = NULL,             # skip issues log
+  dataset_label = "survey_2023.csv",
+  year_tag      = 2023L,
+  log_dir       = "logs/matching",
+  append_master = FALSE             # do not update the master log yet
+)
+```
+
+Setting `append_master = FALSE` is useful when you are iterating on a new
+dataset and do not want half-finished entries accumulating in the master log
+until you are satisfied with the result.
+
+---
+
+### 3.6 `summarise_master_log()` — review all decisions at once
+
+After processing several datasets, call `summarise_master_log()` to get a
+cross-dataset overview of every matching decision recorded in
+`match_log_MASTER.csv`.
+
+```{r}
+summarise_master_log("logs/matching")
+#>
+#> ╔══════════════════════════════════════════════════════╗
+#>   MASTER AUDIT SUMMARY — All Datasets
+#> ╚══════════════════════════════════════════════════════╝
+#>
+#>   Decisions by match method (all datasets):
+#>     exact                          268
+#>     unmatched                      2
+#>     keyword [kjonn]                1
+#>
+#>   Columns flagged for review per dataset:
+#>     survey_2022.csv                     (year 2022): 1 column(s)
+#>     survey_2023.csv                     (year 2023): 1 column(s)
+#>
+#>   ⚠⚠ ALL PREDICTED (keyword) MATCHES — verify these:
+#>     [survey_2022.csv | 2022]  io_kjonn  -> kjonn  (keyword [kjonn])
+#>     [survey_2023.csv | 2023]  io_kjonn  -> kjonn  (keyword [kjonn])
+```
+
+The function returns the full master log `data.table` invisibly so you can
+work with it programmatically.
+
+```{r}
+# Load the master log for custom analysis
+master_log <- summarise_master_log("logs/matching")
+
+# Find all columns that were dropped (unmatched) across all datasets
+dropped <- master_log[method == "unmatched"]
+dropped[, .(dataset, year, raw_name)]
+```
+
+**When to call directly:** at the end of any processing session to confirm
+that all keyword-predicted matches are sensible, and that no unexpected
+columns were silently dropped.
+
+---
+
+## 4. Typical workflows
+
+### Workflow A — exploring a new dataset
+
+You have received a new CSV file and want to understand how it maps to your
+standard variable set before running anything that writes files.
+
+```{r}
+library(cuci)
+library(data.table)
+
+config <- load_config("config/variable_map.yml")
+raw    <- fread("data/raw/new_survey.csv")
+
+# Step 1: see what columns the file has and how they match
+match_result <- match_columns(tolower(names(raw)), config)
+print_match_report(match_result, "new_survey.csv")
+
+# Step 2: if the match looks wrong, update variable_map.yml and reload
+# config <- load_config("config/variable_map.yml")
+
+# Step 3: clean and inspect issues
+out <- clean_dataset(raw, config, year_tag = 2025L, dataset_label = "new_survey.csv")
+out$issues
+
+# Step 4: validate the result
+validate_dataset(out$data, config, "new_survey.csv")
+```
+
+At no point in this workflow is anything written to disk. You are purely
+inspecting. Once you are satisfied, you can either call `export_match_log()`
+to save the audit trail, or add the file to the manifest and run
+`run_pipeline()`.
+
+---
+
+### Workflow B — fixing a specific variable
+
+You have noticed that `tob1` is producing unexpected-value warnings across
+all years. You want to understand the problem without re-processing everything.
+
+```{r}
+config <- load_config("config/variable_map.yml")
+
+# Inspect the current declaration for tob1
+config$value_map$tob1      # what values are currently declared valid
+config$missing_map$tob1    # what values are declared as missing codes
+
+# Load one problem file and look at the raw tob1 column
+raw <- fread("data/raw/survey_2023.csv")
+table(raw$Tob1, useNA = "always")
+#>  1  2  8  9 <NA>
+#> 14  4  1  1    0
+
+# 8 and 9 are present — they are the "no answer" / "don't know" codes
+# They are declared in missing: but apply_missing was FALSE
+# Solution: either add them to value: (to acknowledge they appear)
+# or re-run with apply_missing = TRUE to convert them to NA
+
+out_with_missing <- clean_dataset(
+  raw, config,
+  year_tag      = 2023L,
+  dataset_label = "survey_2023.csv",
+  apply_missing = TRUE    # now 8 and 9 become NA before value check
+)
+out_with_missing$issues   # tob1 should no longer appear here
+```
+
+---
+
+### Workflow C — adding a new variable to the YAML
+
+You want to add a new variable `utdanning` to the pipeline. You can test the
+new YAML entry against a single file before running the full manifest.
+
+```{r}
+# Edit variable_map.yml to add utdanning, then:
+config <- load_config("config/variable_map.yml")
+
+# Verify the new variable is present
+"utdanning" %in% names(config$var_map)
+config$type_map[["utdanning"]]
+config$value_map$utdanning
+
+# Check that it matches correctly in one file
+raw          <- fread("data/raw/survey_2023.csv")
+match_result <- match_columns(tolower(names(raw)), config)
+match_result$match_log[canonical == "utdanning"]
+
+# If it does not match, check the aliases and keywords
+config$name_lookup[config$name_lookup == "utdanning"]
+```
+
+---
+
+### Workflow D — re-running a single file after a YAML fix
+
+You fixed a problem in `variable_map.yml` for one year's file and want to
+re-generate its log without re-processing every other year.
+
+```{r}
+config <- load_config("config/variable_map.yml")
+raw    <- fread("data/raw/survey_2022.csv")
+
+out <- clean_dataset(raw, config, year_tag = 2022L, dataset_label = "survey_2022.csv")
+validate_dataset(out$data, config, "survey_2022.csv")
+
+# Write the log — .update_master_log() will replace the old 2022 rows
+export_match_log(
+  match_result  = match_columns(tolower(names(raw)), config),
+  issues_dt     = out$issues,
+  dataset_label = "survey_2022.csv",
+  year_tag      = 2022L,
+  log_dir       = "logs/matching",
+  append_master = TRUE    # replaces old rows for survey_2022.csv in the master
+)
+```
+
+The master log uses `dataset_label` to identify which rows belong to each
+file. When `append_master = TRUE`, any existing rows for `"survey_2022.csv"`
+are deleted before the new rows are inserted, so there is no duplication.
+
+---
+
+## 5. The audit log files
+
+Three CSV files are produced in `log_dir` over the life of a project.
+
+**`match_log_<dataset>.csv`** — one per dataset, overwritten on each run. Contains one row per column from the raw file. The most useful columns for a human reviewer are:
+
+| Column | Meaning |
+|---|---|
+| `raw_name` | The column name as it appeared in the raw file (after normalisation) |
+| `canonical` | The canonical name it was mapped to (`NA` if unmatched) |
+| `method` | `exact`, `fuzzy`, `keyword [word]`, or `unmatched` |
+| `confidence` | `high`, `medium`, `low`, or `none` |
+| `needs_review` | `TRUE` for fuzzy, keyword, and unmatched rows |
+| `action` | Plain-English description of what was done |
+
+**`issues_<dataset>.csv`** — one per dataset, only written when there are problems. Contains one row per coercion failure or unexpected value.
+
+| Column | Meaning |
+|---|---|
+| `variable` | The canonical variable name |
+| `issue_type` | `coercion_failure`, `coercion_skip`, or `unexpected_values` |
+| `detail` | Description of the problem, including the bad values |
+
+**`match_log_MASTER.csv`** — accumulates rows from all datasets. The primary tool for cross-year auditing. Open this file in Excel or load it with `fread()` to see all matching decisions across the entire project in one place.
+
+```{r}
+# Load and filter the master log programmatically
+master <- data.table::fread("logs/matching/match_log_MASTER.csv", quote = "")
+
+# All keyword-predicted matches (require human verification)
+master[grepl("^keyword", method)]
+
+# All unmatched columns across all datasets (were silently dropped)
+master[method == "unmatched", .(dataset, year, raw_name)]
+
+# All columns flagged for review, sorted by year
+master[needs_review == TRUE][order(year)]
+```

@@ -52,9 +52,6 @@
 #' data, and validates the result.  Returns a list with the cleaned
 #' `data.table` and the issues table from [clean_dataset()].
 #'
-#' Extracted so [run_pipeline()] stays a thin loop and this unit can be
-#' tested or called in isolation.
-#'
 #' @param path          Path to the raw data file.
 #' @param year_tag      Integer year, or `NA` if already in the file.
 #' @param config        Config object from [load_config()].
