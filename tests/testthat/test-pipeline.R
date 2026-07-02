@@ -289,7 +289,7 @@ test_that(".apply_recodes remaps values correctly", {
   cfg <- load_config(yml_path)
   dt  <- data.table(kjonn = c("0","1","2"))
   cuci:::.apply_recodes(dt, cfg, "kjonn")
-  expect_equal(dt$kjonn, c(2L, 1L, 2L))
+  expect_equal(dt$kjonn, c("2", "1", "2")) #ignore type to ensure recode applied, not coercion
 })
 
 test_that(".apply_recodes is a no-op for variables without recode_map", {

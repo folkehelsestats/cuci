@@ -121,7 +121,7 @@
   for (var in cols) {
     rc <- config$recode_map[[var]]
     if (is.null(rc)) next
-
+    
     raw_char  <- as.character(dt[[var]])
     recode_lk <- setNames(rc$new_value, rc$raw_value)
     recoded   <- recode_lk[raw_char]
