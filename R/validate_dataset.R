@@ -3,10 +3,10 @@
 #
 # Post-clean validation: structural checks and value conformance.
 #
-# Public API (exported):
+# Public API:
 #   validate_dataset()          - orchestrator; prints full report, returns dt
 #
-# Internal helpers (not exported, prefixed with `.`):
+# Internal helpers:
 #   .validate_print_header()    - print the report header box
 #   .validate_structure()       - row count, column list, missingness per col
 #   .validate_one_value_col()   - conformance check for a single column

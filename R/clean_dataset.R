@@ -3,10 +3,10 @@
 #
 # Survey dataset cleaning pipeline.
 #
-# Public API (exported):
+# Public API:
 #   clean_dataset()          - orchestrator; applies all steps in order
 #
-# Internal helpers (not exported, prefixed with `.`):
+# Internal helpers:
 #   .normalise_colnames()    - step 1: lowercase + snake_case column names
 #   .apply_renames()         - step 3: rename matched columns in-place
 #   .select_canonical_cols() - step 4: drop non-canonical columns

@@ -3,12 +3,12 @@
 #
 # Three-layer column name matching pipeline.
 #
-# Public API (exported):
+# Public API:
 #   match_columns()          - orchestrator; runs all three layers in order
 #   print_match_report()     - console summary of matching decisions
 #   build_keyword_patterns() - compile regex patterns from YAML keywords
 #
-# Internal helpers (not exported, prefixed with `.`):
+# Internal helpers:
 #   .build_match_row()       - construct one log data.table row
 #   .match_exact()           - layer 1: lookup against known aliases
 #   .match_fuzzy()           - layer 2: Levenshtein edit-distance via agrep()

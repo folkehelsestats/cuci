@@ -3,10 +3,10 @@
 #
 # Parse a YAML variable map into all lookup structures the pipeline needs.
 #
-# Public API (exported):
+# Public API:
 #   load_config()         - orchestrator; calls all builders and returns config
 #
-# Internal helpers (not exported, prefixed with `.`):
+# Internal helpers:
 #   .read_yaml_utf8()     - read YAML file safely with UTF-8 encoding
 #   .normalise_alias()    - snake_case-normalise a single alias string
 #   .build_name_lookup()  - alias  -> canonical  (exact match layer)
