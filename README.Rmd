@@ -26,4 +26,4 @@ knitr::opts_chunk$set(
 <!-- badges: end -->
 
 
-**cuci** is an R package for cleaning and standardize dataset.
+Clean and Unify Collected Information with **cuci**. It is an R package for cleaning and standardize dataset.

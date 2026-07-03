@@ -10,4 +10,5 @@
 coverage](https://codecov.io/gh/folkehelsestats/cuci/graph/badge.svg)](https://app.codecov.io/gh/folkehelsestats/cuci)
 <!-- badges: end -->
 
-**cuci** is an R package for cleaning and standardize dataset.
+Clean and Unify Collected Information with **cuci**. It is an R package
+for cleaning and standardize dataset.
