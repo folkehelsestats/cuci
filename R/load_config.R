@@ -37,11 +37,28 @@
 #' @return The parsed YAML as a named R list.
 #' @keywords internal
 .read_yaml_utf8 <- function(path) {
-  if (!file.exists(path))
-    stop(sprintf("Config file not found: %s", path))
 
-  lines <- readLines(path, encoding = "UTF-8", warn = FALSE)
+  is_url <- grepl("^https?://", path, ignore.case = TRUE) #githbub raw URL, etc.
+
+  if (is_url) {
+    lines <- tryCatch(
+      readLines(path, encoding = "UTF-8", warn = FALSE),
+      error = function(e) {
+        stop(sprintf("Unable to read YAML from URL:\n%s\n%s",
+                     path, e$message),
+             call. = FALSE)
+      }
+    )
+  } else {
+    if (!file.exists(path)) {
+      stop(sprintf("Config file not found:\n%s", path), call. = FALSE)
+    }
+
+    lines <- readLines(path, encoding = "UTF-8", warn = FALSE)
+  }
+
   yaml::yaml.load(paste(lines, collapse = "\n"))
+  
 }
 
 
