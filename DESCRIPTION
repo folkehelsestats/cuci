@@ -1,5 +1,5 @@
 Package: cuci
-Title: Clean and Standardize Datasets from a YAML Variable Map
+Title: Clean and Unify Collected Information
 Version: 0.1.0
 Authors@R: 
     person("Yusman", "Kamaleri", , "ybkamaleri@gmail.com", role = c("aut", "cre"))
