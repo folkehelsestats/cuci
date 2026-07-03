@@ -26,7 +26,6 @@
 # -----------------------------------------------------------------------------
 # .normalise_colnames()
 # -----------------------------------------------------------------------------
-#' @keywords internal
 #' 
 #' Step 1 - normalise column names to snake_case
 #'
@@ -41,6 +40,7 @@
 #' @param dt A data.table.
 #' @return The same data.table with normalised column names (modified by
 #'   reference via [data.table::setnames()]).
+#' @keywords internal
 .normalise_colnames <- function(dt) {
   old <- names(dt)
   new <- tolower(old)
@@ -61,7 +61,6 @@
 # -----------------------------------------------------------------------------
 # .apply_renames()
 # -----------------------------------------------------------------------------
-#' @keywords internal
 #' 
 #' Step 3 - rename matched columns to their canonical names
 #'
@@ -87,7 +86,6 @@
 # -----------------------------------------------------------------------------
 # .select_canonical_cols()
 # -----------------------------------------------------------------------------
-#' @keywords internal
 #' 
 #' Step 4 - keep only columns whose name is a canonical variable name
 #'
@@ -99,6 +97,7 @@
 #' @param dt     A data.table.
 #' @param config Config object from [load_config()].
 #' @return A new data.table containing only canonical columns.
+#' @keywords internal
 .select_canonical_cols <- function(dt, config) {
   keep <- intersect(names(dt), names(config$var_map))
   dt[, keep, with = FALSE]
@@ -108,7 +107,6 @@
 # -----------------------------------------------------------------------------
 # .apply_recodes()
 # -----------------------------------------------------------------------------
-#' @keywords internal
 #' 
 #' Step 5 - recode raw values using the recode_map
 #'
@@ -121,6 +119,7 @@
 #' @param config Config object from [load_config()].
 #' @param cols   Character vector of column names to process.
 #' @return `dt` invisibly.
+#' @keywords internal
 .apply_recodes <- function(dt, config, cols) {
   for (var in cols) {
     rc <- config$recode_map[[var]]
@@ -139,7 +138,6 @@
 # -----------------------------------------------------------------------------
 # .apply_missing_codes()
 # -----------------------------------------------------------------------------
-#' @keywords internal
 #' 
 #' Step 6 - replace declared numeric missing codes with NA
 #'
@@ -155,6 +153,7 @@
 #' @param config Config object from [load_config()].
 #' @param cols   Character vector of column names to process.
 #' @return `dt` invisibly.
+#' @keywords internal
 .apply_missing_codes <- function(dt, config, cols) {
   for (var in cols) {
     codes <- config$missing_map[[var]]
@@ -172,7 +171,6 @@
 # -----------------------------------------------------------------------------
 # .coerce_column()
 # -----------------------------------------------------------------------------
-#' @keywords internal
 #'
 #' Step 7 (single column) - attempt safe type coercion
 #'
@@ -196,6 +194,7 @@
 #'   \item{success}{`TRUE` if coercion is safe (no new NAs).}
 #'   \item{issue}{A one-row data.table describing the problem, or `NULL`.}
 #' }
+#' @keywords internal
 .coerce_column <- function(x, target_type, var, dataset_label = "") {
 
   converted <- switch(
@@ -255,7 +254,6 @@
 # -----------------------------------------------------------------------------
 # .coerce_all_columns()
 # -----------------------------------------------------------------------------
-#' @keywords internal
 #' 
 #' Step 7 (all columns) - apply safe coercion across the dataset
 #'
@@ -269,6 +267,7 @@
 #' @param dataset_label Label for warning messages.
 #'
 #' @return A list of issue data.tables (may be empty).
+#' @keywords internal
 .coerce_all_columns <- function(dt, config, cols, dataset_label = "") {
   issues <- list()
 
@@ -292,7 +291,6 @@
 # -----------------------------------------------------------------------------
 # .validate_column_values()
 # -----------------------------------------------------------------------------
-#' @keywords internal
 #' 
 #' Step 8 (single column) - check observed values against the declared set
 #'
@@ -311,6 +309,7 @@
 #'
 #' @return A one-row issue data.table if unexpected values exist, otherwise
 #'   `NULL`.
+#' @keywords internal
 .validate_column_values <- function(col_vec, valid_set, var, dataset_label = "") {
   non_missing  <- col_vec[!is.na(col_vec)]
   as_int       <- suppressWarnings(as.integer(non_missing))
@@ -338,7 +337,6 @@
 # -----------------------------------------------------------------------------
 # .validate_all_values()
 # -----------------------------------------------------------------------------
-#' @keywords internal
 #' 
 #' Step 8 (all columns) - value conformance check across the dataset
 #'
@@ -351,6 +349,7 @@
 #' @param dataset_label Label for warning messages.
 #'
 #' @return A list of issue data.tables (may be empty).
+#' @keywords internal
 .validate_all_values <- function(dt, config, cols, dataset_label = "") {
   issues <- list()
 
@@ -369,7 +368,6 @@
 # -----------------------------------------------------------------------------
 # .inject_year()
 # -----------------------------------------------------------------------------
-#' @keywords internal
 #' 
 #' Step 9 - add an integer year column
 #'
@@ -380,6 +378,7 @@
 #' @param dt       A data.table (modified by reference).
 #' @param year_tag Integer or `NULL`.
 #' @return `dt` invisibly.
+#' @keywords internal
 .inject_year <- function(dt, year_tag) {
   if (!is.null(year_tag))
     dt[, year := as.integer(year_tag)]
@@ -390,7 +389,6 @@
 # -----------------------------------------------------------------------------
 # .drop_empty_rows()
 # -----------------------------------------------------------------------------
-#' @keywords internal
 #' 
 #' Step 10 - remove duplicate and fully-empty rows
 #'
@@ -399,6 +397,7 @@
 #'
 #' @param dt A data.table.
 #' @return A new data.table with empty/duplicate rows removed.
+#' @keywords internal
 .drop_empty_rows <- function(dt) {
   dt <- unique(dt)
   dt[rowSums(!is.na(dt)) > 0]
@@ -408,7 +407,6 @@
 # -----------------------------------------------------------------------------
 # .compile_issues()
 # -----------------------------------------------------------------------------
-#' @keywords internal
 #' 
 #' Assemble a flat issues data.table from a list of one-row data.tables
 #'
@@ -416,9 +414,8 @@
 #' validation have run.  Returns an empty data.table with the correct schema
 #' when there are no issues, so callers never need to `NULL`-check the result.
 #'
-#' @param issue_lists One or more lists of issue data.tables (from
-#'   [.coerce_all_columns()] and [.validate_all_values()]).
 #' @return A data.table with columns `variable`, `issue_type`, `detail`.
+#' @keywords internal
 .compile_issues <- function(...) {
   all_issues <- unlist(list(...), recursive = FALSE)
 

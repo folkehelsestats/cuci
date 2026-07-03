@@ -48,7 +48,6 @@
 # -----------------------------------------------------------------------------
 # .add_unmatched_rows()
 # -----------------------------------------------------------------------------
-#' @keywords internal
 #' 
 #' Append unmatched-column rows to the match log
 #'
@@ -62,6 +61,7 @@
 #'
 #' @return A `data.table` with unmatched rows appended (or the original
 #'   `log_dt` if there were no unmatched columns).
+#' @keywords internal
 .add_unmatched_rows <- function(log_dt, match_result) {
   if (length(match_result$unmatched) == 0) return(log_dt)
 
@@ -80,7 +80,6 @@
 # -----------------------------------------------------------------------------
 # .annotate_log()
 # -----------------------------------------------------------------------------
-#' @keywords internal
 #' 
 #' Add provenance and action metadata columns to the log
 #'
@@ -95,6 +94,7 @@
 #' @param log_dt       `data.table` to annotate (modified by reference).
 #' @param dataset_label String dataset label.
 #' @param year_tag     Integer or `NA`.
+#' @keywords internal
 .annotate_log <- function(log_dt, dataset_label, year_tag) {
   log_dt[, `:=`(
     dataset   = dataset_label,
@@ -115,7 +115,6 @@
 # -----------------------------------------------------------------------------
 # .sort_log()
 # -----------------------------------------------------------------------------
-#' @keywords internal
 #' 
 #' Sort the log so the most important rows appear first
 #'
@@ -127,6 +126,7 @@
 #' Modifies `log_dt` by reference.
 #'
 #' @param log_dt `data.table` to sort (modified by reference).
+#' @keywords internal
 .sort_log <- function(log_dt) {
   conf_order <- c("none", "low", "medium", "high")
   log_dt[, .conf_rank := match(confidence, conf_order)]
@@ -139,7 +139,6 @@
 # -----------------------------------------------------------------------------
 # .reorder_log_cols()
 # -----------------------------------------------------------------------------
-#' @keywords internal
 #' 
 #' Enforce a canonical column order for readability
 #'
@@ -149,6 +148,7 @@
 #' Modifies `log_dt` by reference.
 #'
 #' @param log_dt `data.table` to reorder (modified by reference).
+#' @keywords internal
 .reorder_log_cols <- function(log_dt) {
   data.table::setcolorder(log_dt, c(
     "dataset", "year", "raw_name", "canonical",
@@ -161,7 +161,6 @@
 # -----------------------------------------------------------------------------
 # .write_per_dataset_log()
 # -----------------------------------------------------------------------------
-#' @keywords internal
 #' 
 #' Write the per-dataset match log to a CSV file
 #'
@@ -174,6 +173,7 @@
 #' @param dataset_label String label used in the filename.
 #'
 #' @return The output file path, invisibly.
+#' @keywords internal
 .write_per_dataset_log <- function(log_dt, log_dir, dataset_label) {
   safe_label <- gsub("[^A-Za-z0-9_-]", "_", dataset_label)
   path       <- file.path(log_dir, sprintf("match_log_%s.csv", safe_label))
@@ -186,7 +186,6 @@
 # -----------------------------------------------------------------------------
 # .write_issues_log()
 # -----------------------------------------------------------------------------
-#' @keywords internal
 #' 
 #' Write the coercion / value-validation issues to a CSV file
 #'
@@ -198,6 +197,9 @@
 #' @param log_dir      Target directory (must already exist).
 #' @param dataset_label String label used in metadata and the filename.
 #' @param year_tag     Integer or `NA`.
+#'
+#' @return The output file path, invisibly.
+#' @keywords internal
 .write_issues_log <- function(issues_dt, log_dir, dataset_label, year_tag) {
   if (is.null(issues_dt) || nrow(issues_dt) == 0) return(invisible(NULL))
 
@@ -219,7 +221,6 @@
 # -----------------------------------------------------------------------------
 # .update_master_log()
 # -----------------------------------------------------------------------------
-#' @keywords internal
 #' 
 #' Merge the current dataset's log rows into the master log and write it back
 #'
@@ -232,6 +233,7 @@
 #' @param dataset_label String label used to remove stale rows.
 #'
 #' @return The combined master `data.table`, invisibly.
+#' @keywords internal
 .update_master_log <- function(log_dt, log_dir, dataset_label) {
   master_path <- file.path(log_dir, "match_log_MASTER.csv")
 

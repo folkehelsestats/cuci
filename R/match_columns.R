@@ -21,7 +21,6 @@
 # -----------------------------------------------------------------------------
 # .build_match_row()
 # -----------------------------------------------------------------------------
-#' @keywords internal
 #'
 #' Build a single-row data.table for the match log
 #'
@@ -32,11 +31,13 @@
 #' @param raw_name     The column name as it appears in the raw dataset.
 #' @param canonical    The canonical variable name it maps to.
 #' @param method       Free-text method label ("exact", "fuzzy", or
-#'                     "keyword [word]").
+#'                     "keyword \[word\]").
 #' @param confidence   One of "high", "medium", or "low".
 #' @param needs_review Logical - should a human verify this decision?
 #'
 #' @return A one-row data.table.
+#'
+#' @keywords internal
 .build_match_row <- function(raw_name, canonical, method, confidence, needs_review) {
   data.table::data.table(
     raw_name     = raw_name,
@@ -51,7 +52,6 @@
 # -----------------------------------------------------------------------------
 # .match_exact()
 # -----------------------------------------------------------------------------
-#' @keywords internal
 #'
 #' Layer 1 - exact alias lookup
 #'
@@ -65,6 +65,8 @@
 #'
 #' @return A list: `rows` (list of one-row data.tables), `claimed` (updated
 #'   claimed_canonical), `remaining` (column names that did not exact-match).
+#'
+#' @keywords internal
 .match_exact <- function(candidates, name_lookup, claimed_canonical) {
 
   rows <- list()
@@ -98,7 +100,6 @@
 # -----------------------------------------------------------------------------
 # .match_fuzzy()
 # -----------------------------------------------------------------------------
-#' @keywords internal
 #'
 #' Layer 2 - fuzzy alias matching via Levenshtein edit distance
 #'
@@ -112,6 +113,8 @@
 #' @param max_distance     Passed to `agrep(max.distance=)`. Default 0.15.
 #'
 #' @return Same structure as [.match_exact()].
+#'
+#' @keywords internal
 .match_fuzzy <- function(candidates, name_lookup, claimed_canonical,
                          max_distance = 0.15) {
 
@@ -155,7 +158,6 @@
 # -----------------------------------------------------------------------------
 # .find_matched_keyword()
 # -----------------------------------------------------------------------------
-#' @keywords internal
 #'
 #' Identify which plain keyword caused a regex hit
 #'
@@ -172,6 +174,7 @@
 #' @param var_map   The raw parsed YAML list (`config$var_map`).
 #'
 #' @return A single string: the keyword that matched.
+#' @keywords internal
 .find_matched_keyword <- function(col, canonical, var_map) {
 
   plain_kws <- as.character(var_map[[canonical]]$keywords)
@@ -194,7 +197,6 @@
 # -----------------------------------------------------------------------------
 # .match_keyword()
 # -----------------------------------------------------------------------------
-#' @keywords internal
 #'
 #' Layer 3 - keyword / regex pattern matching
 #'
@@ -209,6 +211,7 @@
 #' @param var_map           Raw YAML list for keyword display lookup.
 #'
 #' @return Same structure as [.match_exact()].
+#' @keywords internal
 .match_keyword <- function(candidates, keyword_patterns, claimed_canonical, var_map) {
 
   rows <- list()
@@ -256,7 +259,6 @@
 # -----------------------------------------------------------------------------
 # .compile_match_result()
 # -----------------------------------------------------------------------------
-#' @keywords internal
 #'
 #' Compile the final match result from accumulated log rows
 #'
@@ -271,6 +273,7 @@
 #' @param raw_colnames  The original full set of column names.
 #'
 #' @return List with `match_log`, `rename_vec`, and `unmatched`.
+#' @keywords internal
 .compile_match_result <- function(row_list, raw_colnames) {
 
   if (length(row_list) == 0) {

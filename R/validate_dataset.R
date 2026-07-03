@@ -18,8 +18,6 @@
 # -----------------------------------------------------------------------------
 # .validate_print_header()
 # -----------------------------------------------------------------------------
-#' @keywords internal
-#'
 #' 
 #' Print the validation report header
 #'
@@ -28,6 +26,7 @@
 #'
 #' @param dataset_label String label for the dataset.
 #' @param width Integer width of the separator line. Default `48`.
+#' @keywords internal
 .validate_print_header <- function(dataset_label, width = 48L) {
   cat(sprintf("\n%s\n", strrep("=", width)))
   cat(sprintf(" Validation Report: %s\n", dataset_label))
@@ -38,7 +37,6 @@
 # -----------------------------------------------------------------------------
 # .validate_structure()
 # -----------------------------------------------------------------------------
-#' @keywords internal
 #'
 #' Report structural properties of the cleaned dataset
 #'
@@ -47,6 +45,7 @@
 #' they stand out when scanning a long report.
 #'
 #' @param dt A data.table.
+#' @keywords internal
 .validate_structure <- function(dt) {
   cat(sprintf("  Rows    : %d\n", nrow(dt)))
   cat(sprintf("  Columns : %s\n\n", paste(names(dt), collapse = ", ")))
@@ -63,8 +62,6 @@
 # -----------------------------------------------------------------------------
 # .validate_one_value_col()
 # -----------------------------------------------------------------------------
-#' @keywords internal
-#'
 #' 
 #' Check one column's observed values against the declared valid set
 #'
@@ -80,6 +77,7 @@
 #'
 #' @return Integer vector of unexpected values, length 0 if all values are
 #'   valid.
+#' @keywords internal
 .validate_one_value_col <- function(col_vec, valid_set) {
   non_missing <- col_vec[!is.na(col_vec)]
   as_int      <- suppressWarnings(as.integer(non_missing))
@@ -90,8 +88,6 @@
 # -----------------------------------------------------------------------------
 # .validate_all_value_cols()
 # -----------------------------------------------------------------------------
-#' @keywords internal
-#'
 #' 
 #' Check all columns that have a declared value set
 #'
@@ -101,6 +97,7 @@
 #'
 #' @param dt     A data.table (read-only).
 #' @param config Config object from [load_config()].
+#' @keywords internal
 .validate_all_value_cols <- function(dt, config) {
   any_issue <- FALSE
 
@@ -132,11 +129,11 @@
 # -----------------------------------------------------------------------------
 # .validate_print_footer()
 # -----------------------------------------------------------------------------
-#' @keywords internal
 #'
 #' Print the closing separator for the validation report
 #'
 #' @param width Integer width of the separator line. Default `48`.
+#' @keywords internal
 .validate_print_footer <- function(width = 48L) {
   cat(sprintf("%s\n", strrep("=", width)))
 }

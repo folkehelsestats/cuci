@@ -17,8 +17,6 @@
 # -----------------------------------------------------------------------------
 # .read_raw_file()
 # -----------------------------------------------------------------------------
-#' @keywords internal
-#'
 #' 
 #' Read a raw data file into a data.table
 #'
@@ -27,6 +25,7 @@
 #'
 #' @param path Path to the raw data file.
 #' @return A `data.table`.
+#' @keywords internal
 .read_raw_file <- function(path) {
   ext <- tolower(tools::file_ext(path))
   switch(
@@ -47,7 +46,6 @@
 # -----------------------------------------------------------------------------
 # .process_one_file()
 # -----------------------------------------------------------------------------
-#' @keywords internal
 #'
 #' Run the full pipeline for a single raw data file
 #'
@@ -63,6 +61,7 @@
 #'
 #' @return A list: `data` (cleaned `data.table`), `issues` (`data.table`),
 #'   `label` (filename used as dataset label).
+#' @keywords internal
 .process_one_file <- function(path, year_tag, config, log_dir, apply_missing) {
 
   label <- basename(path)
@@ -111,7 +110,6 @@
 # -----------------------------------------------------------------------------
 # .merge_datasets()
 # -----------------------------------------------------------------------------
-#' @keywords internal
 #'
 #' Stack a list of cleaned data.tables into one master data.table
 #'
@@ -121,6 +119,7 @@
 #'
 #' @param clean_list List of `data.table`s (one per processed file).
 #' @return A single stacked `data.table`.
+#' @keywords internal
 .merge_datasets <- function(clean_list) {
   master_dt  <- data.table::rbindlist(clean_list, fill = TRUE, use.names = TRUE)
   other_cols <- setdiff(names(master_dt), "year")
@@ -135,7 +134,6 @@
 # -----------------------------------------------------------------------------
 # .save_output()
 # -----------------------------------------------------------------------------
-#' @keywords internal
 #'
 #' Write the pipeline output to disk
 #'
@@ -153,6 +151,7 @@
 #'   `NULL` to skip writing.
 #' @param merge        Logical - matches the `merge` argument from
 #'   [run_pipeline()].
+#' @keywords internal
 .save_output <- function(output, output_path, merge) {
   if (is.null(output_path)) return(invisible(NULL))
 
@@ -189,7 +188,7 @@
 #' Run the full survey data cleaning pipeline
 #'
 #' Processes every file in `file_manifest` through the complete pipeline
-#' (read \u2192 match \u2192 log \u2192 clean \u2192 validate) and returns the results either
+#' (read -> match -> log -> clean -> validate) and returns the results either
 #' merged into one `data.table` or as a named list of separate `data.table`s.
 #'
 #' @section Output modes:

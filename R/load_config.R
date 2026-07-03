@@ -25,7 +25,6 @@
 # -----------------------------------------------------------------------------
 # .read_yaml_utf8()
 # -----------------------------------------------------------------------------
-#' @keywords internal
 #'
 #' Read a YAML file with explicit UTF-8 encoding
 #'
@@ -36,6 +35,7 @@
 #'
 #' @param path Path to the YAML file.
 #' @return The parsed YAML as a named R list.
+#' @keywords internal
 .read_yaml_utf8 <- function(path) {
   if (!file.exists(path))
     stop(sprintf("Config file not found: %s", path))
@@ -48,7 +48,6 @@
 # -----------------------------------------------------------------------------
 # .normalise_alias()
 # -----------------------------------------------------------------------------
-#' @keywords internal
 #'
 #' Normalise a single alias string to snake_case
 #'
@@ -61,6 +60,7 @@
 #'
 #' @param x A single character string.
 #' @return Normalised string.
+#' @keywords internal
 .normalise_alias <- function(x) {
   x <- tolower(x)
   x <- gsub("[^a-z0-9]+", "_", x)
@@ -71,7 +71,6 @@
 # -----------------------------------------------------------------------------
 # .build_name_lookup()
 # -----------------------------------------------------------------------------
-#' @keywords internal
 #'
 #' Build the alias -> canonical name lookup vector
 #'
@@ -82,6 +81,7 @@
 #'
 #' @param var_map Parsed YAML list.
 #' @return Named character vector: names are aliases, values are canonicals.
+#' @keywords internal
 .build_name_lookup <- function(var_map) {
   entries <- lapply(names(var_map), function(canonical) {
     aliases <- var_map[[canonical]]$colnames
@@ -99,7 +99,6 @@
 # -----------------------------------------------------------------------------
 # .build_type_map()
 # -----------------------------------------------------------------------------
-#' @keywords internal
 #'
 #' Build the canonical -> R type map
 #'
@@ -109,6 +108,7 @@
 #' @param var_map Parsed YAML list.
 #' @return Named character vector: names are canonicals, values are R type
 #'   strings ("integer", "numeric", "character", etc.).
+#' @keywords internal
 .build_type_map <- function(var_map) {
   sapply(names(var_map), function(canonical) {
     var_map[[canonical]]$type %||% "character"
@@ -119,7 +119,6 @@
 # -----------------------------------------------------------------------------
 # .build_label_lookup()
 # -----------------------------------------------------------------------------
-#' @keywords internal
 #'
 #' Build the canonical -> human-readable label lookup
 #'
@@ -129,6 +128,7 @@
 #' @param var_map Parsed YAML list.
 #' @return Named list: names are canonicals, values are label strings (or
 #'   `NULL` if the field was absent).
+#' @keywords internal
 .build_label_lookup <- function(var_map) {
   labels <- lapply(names(var_map), function(canonical) {
     var_map[[canonical]]$label
@@ -140,7 +140,6 @@
 # -----------------------------------------------------------------------------
 # .build_value_map()
 # -----------------------------------------------------------------------------
-#' @keywords internal
 #'
 #' Build the canonical -> valid-value table map
 #'
@@ -153,6 +152,7 @@
 #'
 #' @param var_map Parsed YAML list.
 #' @return Named list of `data.table`s (or `NULL` per variable).
+#' @keywords internal
 .build_value_map <- function(var_map) {
   maps <- lapply(names(var_map), function(canonical) {
     value_list <- var_map[[canonical]]$value
@@ -170,7 +170,6 @@
 # -----------------------------------------------------------------------------
 # .build_recode_map()
 # -----------------------------------------------------------------------------
-#' @keywords internal
 #'
 #' Build the canonical -> recode table map
 #'
@@ -183,6 +182,7 @@
 #'
 #' @param var_map Parsed YAML list.
 #' @return Named list of `data.table`s (or `NULL` per variable).
+#' @keywords internal
 .build_recode_map <- function(var_map) {
   maps <- lapply(names(var_map), function(canonical) {
     recode_list <- var_map[[canonical]]$recode
@@ -200,7 +200,6 @@
 # -----------------------------------------------------------------------------
 # .build_missing_map()
 # -----------------------------------------------------------------------------
-#' @keywords internal
 #'
 #' Build the canonical -> missing-code vector map
 #'
@@ -213,6 +212,7 @@
 #'
 #' @param var_map Parsed YAML list.
 #' @return Named list of integer vectors (or `NULL` per variable).
+#' @keywords internal
 .build_missing_map <- function(var_map) {
   maps <- lapply(names(var_map), function(canonical) {
     miss <- var_map[[canonical]]$missing
