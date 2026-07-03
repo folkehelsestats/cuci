@@ -22,6 +22,7 @@
 # .build_match_row()
 # -----------------------------------------------------------------------------
 #' @keywords internal
+#'
 #' Build a single-row data.table for the match log
 #'
 #' Centralises the repeated data.table construction that would otherwise be
@@ -51,6 +52,7 @@
 # .match_exact()
 # -----------------------------------------------------------------------------
 #' @keywords internal
+#'
 #' Layer 1 - exact alias lookup
 #'
 #' Checks each candidate column name directly against `config$name_lookup`,
@@ -97,6 +99,7 @@
 # .match_fuzzy()
 # -----------------------------------------------------------------------------
 #' @keywords internal
+#'
 #' Layer 2 - fuzzy alias matching via Levenshtein edit distance
 #'
 #' Uses [base::agrep()] to find aliases within `max_distance` edit-distance
@@ -153,6 +156,7 @@
 # .find_matched_keyword()
 # -----------------------------------------------------------------------------
 #' @keywords internal
+#'
 #' Identify which plain keyword caused a regex hit
 #'
 #' After [.match_keyword()] confirms that a pattern matched, this function
@@ -191,6 +195,7 @@
 # .match_keyword()
 # -----------------------------------------------------------------------------
 #' @keywords internal
+#'
 #' Layer 3 - keyword / regex pattern matching
 #'
 #' Iterates over every variable's compiled regex pattern and tests each
@@ -252,6 +257,7 @@
 # .compile_match_result()
 # -----------------------------------------------------------------------------
 #' @keywords internal
+#'
 #' Compile the final match result from accumulated log rows
 #'
 #' Takes the flat list of one-row data.tables produced by all three match
@@ -270,7 +276,7 @@
   if (length(row_list) == 0) {
     return(list(
       match_log  = data.table::data.table(),
-      rename_vec = setNames(character(0), character(0)),
+      rename_vec = stats::setNames(character(0), character(0)),
       unmatched  = raw_colnames
     ))
   }
@@ -279,7 +285,7 @@
 
   # Only rows where the name actually changed need to be in rename_vec
   rename_rows <- log_dt[log_dt$raw_name != log_dt$canonical, ]
-  rename_vec  <- setNames(rename_rows$canonical, rename_rows$raw_name)
+  rename_vec  <- stats::setNames(rename_rows$canonical, rename_rows$raw_name)
 
   list(
     match_log  = log_dt,

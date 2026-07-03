@@ -26,6 +26,7 @@
 # .read_yaml_utf8()
 # -----------------------------------------------------------------------------
 #' @keywords internal
+#'
 #' Read a YAML file with explicit UTF-8 encoding
 #'
 #' Using [yaml::read_yaml()] directly can fail on Windows when the file
@@ -48,6 +49,7 @@
 # .normalise_alias()
 # -----------------------------------------------------------------------------
 #' @keywords internal
+#'
 #' Normalise a single alias string to snake_case
 #'
 #' Mirrors the transformation applied by [.normalise_colnames()] in
@@ -70,6 +72,7 @@
 # .build_name_lookup()
 # -----------------------------------------------------------------------------
 #' @keywords internal
+#'
 #' Build the alias -> canonical name lookup vector
 #'
 #' For each canonical variable, reads its `colnames:` list from the YAML and
@@ -86,7 +89,7 @@
 
     # Both raw and normalised forms map to the same canonical
     all_aliases <- unique(c(aliases, vapply(aliases, .normalise_alias, character(1))))
-    setNames(rep(canonical, length(all_aliases)), all_aliases)
+    stats::setNames(rep(canonical, length(all_aliases)), all_aliases)
   })
 
   unlist(Filter(Negate(is.null), entries))
@@ -97,6 +100,7 @@
 # .build_type_map()
 # -----------------------------------------------------------------------------
 #' @keywords internal
+#'
 #' Build the canonical -> R type map
 #'
 #' Reads the `type:` field for each variable.  Falls back to `"character"`
@@ -116,6 +120,7 @@
 # .build_label_lookup()
 # -----------------------------------------------------------------------------
 #' @keywords internal
+#'
 #' Build the canonical -> human-readable label lookup
 #'
 #' Reads the `label:` field for each variable.  Used in reports and audit
@@ -128,7 +133,7 @@
   labels <- lapply(names(var_map), function(canonical) {
     var_map[[canonical]]$label
   })
-  setNames(labels, names(var_map))
+  stats::setNames(labels, names(var_map))
 }
 
 
@@ -136,6 +141,7 @@
 # .build_value_map()
 # -----------------------------------------------------------------------------
 #' @keywords internal
+#'
 #' Build the canonical -> valid-value table map
 #'
 #' For each variable with a `value:` block, creates a two-column `data.table`
@@ -157,7 +163,7 @@
       chr_value = as.character(unlist(value_list))
     )
   })
-  setNames(maps, names(var_map))
+  stats::setNames(maps, names(var_map))
 }
 
 
@@ -165,6 +171,7 @@
 # .build_recode_map()
 # -----------------------------------------------------------------------------
 #' @keywords internal
+#'
 #' Build the canonical -> recode table map
 #'
 #' For each variable with a `recode:` block, creates a two-column `data.table`
@@ -186,7 +193,7 @@
       new_value = as.integer(unlist(recode_list))
     )
   })
-  setNames(maps, names(var_map))
+  stats::setNames(maps, names(var_map))
 }
 
 
@@ -194,6 +201,7 @@
 # .build_missing_map()
 # -----------------------------------------------------------------------------
 #' @keywords internal
+#'
 #' Build the canonical -> missing-code vector map
 #'
 #' Reads the `missing:` block for each variable and returns only the numeric
@@ -215,7 +223,7 @@
     if (length(miss) == 0) return(NULL)
     miss
   })
-  setNames(maps, names(var_map))
+  stats::setNames(maps, names(var_map))
 }
 
 

@@ -22,13 +22,15 @@
 # -----------------------------------------------------------------------------
 # .ensure_log_dir()
 # -----------------------------------------------------------------------------
-#' @keywords internal
 #' Create the log directory if it does not already exist
 #'
 #' Extracted so every log-writing helper can call this without duplicating
 #' the `dir.exists` / `dir.create` pattern.
 #'
 #' @param log_dir Path to the log directory.
+#'
+#' @keywords internal
+ 
 .ensure_log_dir <- function(log_dir) {
   if (!dir.exists(log_dir)) {
     dir.create(log_dir, recursive = TRUE)
@@ -47,6 +49,7 @@
 # .add_unmatched_rows()
 # -----------------------------------------------------------------------------
 #' @keywords internal
+#' 
 #' Append unmatched-column rows to the match log
 #'
 #' Columns that fell through all three matching layers have no entry in
@@ -78,6 +81,7 @@
 # .annotate_log()
 # -----------------------------------------------------------------------------
 #' @keywords internal
+#' 
 #' Add provenance and action metadata columns to the log
 #'
 #' Attaches four columns that turn a bare match log into a full audit record:
@@ -112,6 +116,7 @@
 # .sort_log()
 # -----------------------------------------------------------------------------
 #' @keywords internal
+#' 
 #' Sort the log so the most important rows appear first
 #'
 #' Rows flagged for review come before confirmed matches.  Within the
@@ -135,6 +140,7 @@
 # .reorder_log_cols()
 # -----------------------------------------------------------------------------
 #' @keywords internal
+#' 
 #' Enforce a canonical column order for readability
 #'
 #' Puts the most useful columns (what file, what year, what happened) first
@@ -156,6 +162,7 @@
 # .write_per_dataset_log()
 # -----------------------------------------------------------------------------
 #' @keywords internal
+#' 
 #' Write the per-dataset match log to a CSV file
 #'
 #' Uses `dataset_label` (sanitised for use in filenames) to produce a unique
@@ -180,6 +187,7 @@
 # .write_issues_log()
 # -----------------------------------------------------------------------------
 #' @keywords internal
+#' 
 #' Write the coercion / value-validation issues to a CSV file
 #'
 #' Only called when `issues_dt` is non-`NULL` and has at least one row.
@@ -212,6 +220,7 @@
 # .update_master_log()
 # -----------------------------------------------------------------------------
 #' @keywords internal
+#' 
 #' Merge the current dataset's log rows into the master log and write it back
 #'
 #' If a master log already exists, any rows from the same `dataset_label` are
@@ -270,8 +279,6 @@
 #'
 #' @return The annotated log `data.table` for this dataset, invisibly.
 #'
-#' @importFrom data.table data.table rbindlist fread fwrite setorder setcolorder
-#'   fcase copy
 #' @export
 export_match_log <- function(match_result,
                              issues_dt     = NULL,

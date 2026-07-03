@@ -19,6 +19,8 @@
 # .validate_print_header()
 # -----------------------------------------------------------------------------
 #' @keywords internal
+#'
+#' 
 #' Print the validation report header
 #'
 #' Prints a fixed-width separator and the dataset label.  Extracted so the
@@ -37,6 +39,7 @@
 # .validate_structure()
 # -----------------------------------------------------------------------------
 #' @keywords internal
+#'
 #' Report structural properties of the cleaned dataset
 #'
 #' Prints row count, column names, and missingness percentage per column.
@@ -61,6 +64,8 @@
 # .validate_one_value_col()
 # -----------------------------------------------------------------------------
 #' @keywords internal
+#'
+#' 
 #' Check one column's observed values against the declared valid set
 #'
 #' Compares the non-missing integer values in `col_vec` against `valid_set`
@@ -86,6 +91,8 @@
 # .validate_all_value_cols()
 # -----------------------------------------------------------------------------
 #' @keywords internal
+#'
+#' 
 #' Check all columns that have a declared value set
 #'
 #' Iterates over the intersection of `dt`'s columns and `config$value_map`,
@@ -126,6 +133,7 @@
 # .validate_print_footer()
 # -----------------------------------------------------------------------------
 #' @keywords internal
+#'
 #' Print the closing separator for the validation report
 #'
 #' @param width Integer width of the separator line. Default `48`.

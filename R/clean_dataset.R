@@ -27,6 +27,7 @@
 # .normalise_colnames()
 # -----------------------------------------------------------------------------
 #' @keywords internal
+#' 
 #' Step 1 - normalise column names to snake_case
 #'
 #' Converts all column names to lowercase, replaces any run of non-alphanumeric
@@ -61,6 +62,7 @@
 # .apply_renames()
 # -----------------------------------------------------------------------------
 #' @keywords internal
+#' 
 #' Step 3 - rename matched columns to their canonical names
 #'
 #' Applies `rename_vec` (a named character vector `old -> new`) to `dt` using
@@ -86,6 +88,7 @@
 # .select_canonical_cols()
 # -----------------------------------------------------------------------------
 #' @keywords internal
+#' 
 #' Step 4 - keep only columns whose name is a canonical variable name
 #'
 #' Any column not present in `names(config$var_map)` is dropped.  This is
@@ -106,6 +109,7 @@
 # .apply_recodes()
 # -----------------------------------------------------------------------------
 #' @keywords internal
+#' 
 #' Step 5 - recode raw values using the recode_map
 #'
 #' For each variable with a `recode:` block in the YAML, builds a lookup
@@ -123,7 +127,7 @@
     if (is.null(rc)) next
     
     raw_char  <- as.character(dt[[var]])
-    recode_lk <- setNames(rc$new_value, rc$raw_value)
+    recode_lk <- stats::setNames(rc$new_value, rc$raw_value)
     recoded   <- recode_lk[raw_char]
     changed   <- !is.na(recoded)
     if (any(changed)) dt[changed, (var) := recoded[changed]]
@@ -136,6 +140,7 @@
 # .apply_missing_codes()
 # -----------------------------------------------------------------------------
 #' @keywords internal
+#' 
 #' Step 6 - replace declared numeric missing codes with NA
 #'
 #' Only replaces integer codes listed in the `missing:` YAML block.  Literal
@@ -168,6 +173,7 @@
 # .coerce_column()
 # -----------------------------------------------------------------------------
 #' @keywords internal
+#'
 #' Step 7 (single column) - attempt safe type coercion
 #'
 #' Converts `x` to `target_type` and checks whether the conversion introduced
@@ -250,6 +256,7 @@
 # .coerce_all_columns()
 # -----------------------------------------------------------------------------
 #' @keywords internal
+#' 
 #' Step 7 (all columns) - apply safe coercion across the dataset
 #'
 #' Iterates over `cols`, calls [.coerce_column()] for each, applies the result
@@ -286,6 +293,7 @@
 # .validate_column_values()
 # -----------------------------------------------------------------------------
 #' @keywords internal
+#' 
 #' Step 8 (single column) - check observed values against the declared set
 #'
 #' When the YAML declares a `value:` block, every non-missing cell must be one
@@ -331,6 +339,7 @@
 # .validate_all_values()
 # -----------------------------------------------------------------------------
 #' @keywords internal
+#' 
 #' Step 8 (all columns) - value conformance check across the dataset
 #'
 #' Iterates over `cols`, skips variables with no `value:` block, and calls
@@ -361,6 +370,7 @@
 # .inject_year()
 # -----------------------------------------------------------------------------
 #' @keywords internal
+#' 
 #' Step 9 - add an integer year column
 #'
 #' Adds `year` as the first column of `dt` by reference.  When stacking
@@ -381,6 +391,7 @@
 # .drop_empty_rows()
 # -----------------------------------------------------------------------------
 #' @keywords internal
+#' 
 #' Step 10 - remove duplicate and fully-empty rows
 #'
 #' First deduplicates with [data.table::unique()], then drops rows where every
@@ -398,6 +409,7 @@
 # .compile_issues()
 # -----------------------------------------------------------------------------
 #' @keywords internal
+#' 
 #' Assemble a flat issues data.table from a list of one-row data.tables
 #'
 #' Called at the end of [clean_dataset()] after both coercion and value

@@ -18,6 +18,8 @@
 # .read_raw_file()
 # -----------------------------------------------------------------------------
 #' @keywords internal
+#'
+#' 
 #' Read a raw data file into a data.table
 #'
 #' Dispatches on file extension.  Supports `.csv`, `.tsv`, and `.xlsx`.
@@ -46,6 +48,7 @@
 # .process_one_file()
 # -----------------------------------------------------------------------------
 #' @keywords internal
+#'
 #' Run the full pipeline for a single raw data file
 #'
 #' Reads the file, runs column matching, exports the match log, cleans the
@@ -109,6 +112,7 @@
 # .merge_datasets()
 # -----------------------------------------------------------------------------
 #' @keywords internal
+#'
 #' Stack a list of cleaned data.tables into one master data.table
 #'
 #' Uses [data.table::rbindlist()] with `fill = TRUE` so datasets with
@@ -132,6 +136,7 @@
 # .save_output()
 # -----------------------------------------------------------------------------
 #' @keywords internal
+#'
 #' Write the pipeline output to disk
 #'
 #' Handles both the merged (`merge = TRUE`) and separate (`merge = FALSE`)
