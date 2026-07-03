@@ -177,7 +177,7 @@
 .write_per_dataset_log <- function(log_dt, log_dir, dataset_label) {
   safe_label <- gsub("[^A-Za-z0-9_-]", "_", dataset_label)
   path       <- file.path(log_dir, sprintf("match_log_%s.csv", safe_label))
-  data.table::fwrite(log_dt, path)
+  data.table::fwrite(log_dt, path, sep = ";")
   message(sprintf("  Match log saved: %s", path))
   invisible(path)
 }
@@ -212,7 +212,7 @@
 
   safe_label <- gsub("[^A-Za-z0-9_-]", "_", dataset_label)
   path       <- file.path(log_dir, sprintf("issues_%s.csv", safe_label))
-  data.table::fwrite(issues_dt, path)
+  data.table::fwrite(issues_dt, path, sep = ";")
   message(sprintf("  Issues log saved: %s", path))
   invisible(path)
 }
