@@ -12,18 +12,375 @@ knitr:
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
-  comment = "#>",
+  comment  = "#>",
   fig.path = "man/img/README-",
-  out.width = "100%"
+  out.width = "100%",
+  eval = FALSE
 )
 ```
 
-# cuci 
+# cuci <img src="man/img/cuci-hex.png" align="right" height="139" alt="cuci logo" />
 
 <!-- badges: start -->
 [![R-CMD-check](https://github.com/folkehelsestats/cuci/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/folkehelsestats/cuci/actions/workflows/R-CMD-check.yaml)
 [![Codecov test coverage](https://codecov.io/gh/folkehelsestats/cuci/graph/badge.svg)](https://app.codecov.io/gh/folkehelsestats/cuci)
 <!-- badges: end -->
 
+**cuci** (**C**lean and **U**nify **C**ollected **I**nformation) is an R
+package for standardising multi-year survey datasets. You declare your target
+variable set once in a YAML file - names, types, valid values, recode rules,
+missing codes - and cuci applies that declaration consistently to every raw
+file, producing clean data and a full audit trail of every decision made along
+the way.
 
-Clean and Unify Collected Information with **cuci**. It is an R package for cleaning and standardize dataset.
+---
+
+## The problem cuci solves
+
+Survey data collected over multiple years rarely arrives in the same shape. A
+variable called `IO_Kjonn` in 2022 might be `gender_var` in 2023 and `Kjonn`
+in 2024. Coding schemes change. Missing-value codes differ. Types are
+inconsistent. Handling this manually - with per-year scripts or copy-pasted
+cleaning code - is error-prone and hard to audit.
+
+cuci centralises all of these rules in a single YAML file and enforces them
+automatically, so your cleaning logic lives in one place and every raw file
+goes through exactly the same process.
+
+---
+
+## Installation
+
+```{r install}
+# Install the development version from GitHub
+# install.packages("pak")
+pak::pak("folkehelsestats/cuci")
+```
+
+---
+
+## Core concept: the variable map
+
+Everything in cuci flows from a YAML file - the **variable map** - that
+describes what each variable in your clean output should look like.
+
+```yaml
+# config/variable_map.yml
+
+kjonn:
+  colnames: [Kjonn, IO_Kjonn, gender_var]    # known aliases across raw files
+  keywords: [kjonn, sex, gender]             # fallback: matched by substring
+  type: integer                              # target R type
+  label: "Respondentens kjønn"
+  value:                                     # the complete valid value set
+    1: "Mann"
+    2: "Kvinne"
+  recode:                                    # standardise old codings
+    "0": 2
+    "1": 1
+  missing:                                   # codes that mean "no answer"
+    - 8
+    - 9
+
+alder:
+  colnames: [Alder, age_yrs]
+  keywords: [alder, age]
+  type: integer
+  label: "Alder i år"
+  value: ~
+  recode: ~
+  missing:
+    - 99
+```
+
+Each top-level key (`kjonn`, `alder`, …) is the **canonical name** - the name
+the variable will have in the cleaned output regardless of what it was called
+in the raw file. See `vignette("cuci-introduction")` for a full explanation of
+every field.
+
+---
+
+## Quick start
+
+### Step 1 - Load the variable map
+
+```{r load-config}
+library(cuci)
+
+config <- load_config("config/variable_map.yml")
+
+# Inspect what was parsed
+names(config$var_map)
+#> [1] "kjonn"       "alder"       "yrkesstatus" "siv"         "antpers" "tob1"
+
+config$type_map
+#>       kjonn       alder yrkesstatus         siv     antpers        tob1
+#>   "integer"   "integer"   "integer"   "integer"   "integer"   "integer"
+
+config$value_map$kjonn
+#>    num_value chr_value
+#> 1:         1      Mann
+#> 2:         2    Kvinne
+```
+
+### Step 2 - Run the pipeline
+
+Provide a manifest table with one row per raw file and the year it belongs to.
+
+```{r run-pipeline}
+library(data.table)
+
+manifest <- data.table(
+  path     = c(
+    "data/raw/survey_2023.csv",
+    "data/raw/survey_2024.csv"
+  ),
+  year_tag = c(2023L, 2024L)
+)
+
+# Returns a named list - one cleaned data.table per file
+results <- run_pipeline(
+  file_manifest = manifest,
+  config_file   = "config/variable_map.yml",
+  log_dir       = "logs/matching",
+  output_path   = "data/clean",      # directory: one CSV per file
+  merge         = FALSE
+)
+
+results[["survey_2023.csv"]]
+#>     year kjonn alder yrkesstatus siv antpers tob1
+#>  1: 2023     2    75           2   3       1    2
+#>  2: 2023     2    42           1   1       2    2
+#>  ...
+
+# Or stack all years into one master dataset
+master <- run_pipeline(
+  file_manifest = manifest,
+  config_file   = "config/variable_map.yml",
+  log_dir       = "logs/matching",
+  output_path   = "data/clean/master.csv",  # single file
+  merge         = TRUE
+)
+```
+
+---
+
+## How column matching works
+
+cuci tries to match every raw column name to a canonical variable through
+three layers, stopping at the first successful match:
+
+```
+Layer 1 - EXACT     Column name is a known alias in colnames:
+                    Confidence: HIGH  |  No review needed
+                    "IO_Kjonn" -> "kjonn"  ✓
+
+Layer 2 - FUZZY     Column name is close to a known alias (typo tolerance)
+                    Confidence: MEDIUM  |  Flagged for review
+                    "Alderr" -> "alder"  ✓  (one edit distance away)
+
+Layer 3 - KEYWORD   Column name contains a keyword from keywords:
+                    Confidence: LOW  |  Always flagged for review
+                    "io_kjonn" -> "kjonn"  ✓  (contains "kjonn")
+```
+
+Columns that do not match any layer are dropped from the output and recorded
+in the audit log as `unmatched`.
+
+---
+
+## Single-function usage
+
+Because each step of the pipeline is an exported function, you can call any
+of them independently. This is useful when exploring a new file, debugging a
+specific variable, or building a custom workflow.
+
+### Check column matching before cleaning
+
+```{r match-columns}
+library(data.table)
+
+config <- load_config("config/variable_map.yml")
+raw    <- fread("data/raw/survey_2023.csv")
+
+# names(raw): IO_Kjonn, Alder, Yrkesstatus, Siv, Antpers, Tob1
+
+match_result <- match_columns(
+  raw_colnames = tolower(names(raw)),
+  config       = config
+)
+
+# Structured log of every matching decision
+match_result$match_log
+#>       raw_name   canonical           method confidence needs_review
+#> 1: yrkesstatus yrkesstatus            exact       high        FALSE
+#> 2:       alder       alder            exact       high        FALSE
+#> 3:         siv         siv            exact       high        FALSE
+#> 4:     antpers     antpers            exact       high        FALSE
+#> 5:        tob1        tob1            exact       high        FALSE
+#> 6:    io_kjonn       kjonn  keyword [kjonn]        low         TRUE
+
+# Pretty-print to the console
+print_match_report(match_result, "survey_2023.csv")
+#>
+#> ╔══════════════════════════════════════╗
+#>   Column Matching Report: survey_2023.csv
+#> ╚══════════════════════════════════════╝
+#>
+#>   ✔ EXACT MATCHES (5):
+#>     alder                     -> alder
+#>     yrkesstatus               -> yrkesstatus
+#>     ...
+#>
+#>   🚫 KEYWORD/PREDICTED MATCHES - must verify (1):
+#>     io_kjonn                  -> kjonn   matched by keyword [kjonn]
+```
+
+### Clean a single dataset
+
+```{r clean-dataset}
+out <- clean_dataset(
+  dt            = raw,
+  config        = config,
+  year_tag      = 2023L,
+  dataset_label = "survey_2023.csv"
+)
+
+# The cleaned data.table
+out$data
+#>     year kjonn alder yrkesstatus  siv antpers tob1
+#>  1: 2023     2    75           2    3       1    2
+#>  2: 2023     2    42           1    1       2    2
+#>  ...
+
+# Issues found during cleaning - check this before saving
+out$issues
+#>    variable    issue_type                                       detail
+#> 1:      siv coerce_failure  Target: integer. 1 value(s) -> NA: D. ...
+#> 2:     tob1 unexpected_values  Values not declared in YAML: 8, 9. ...
+```
+
+`clean_dataset()` never silently corrupts data. If a column cannot be safely
+converted to its declared type, it is left unchanged and the problem is
+recorded in `out$issues`. Fix the YAML or the source data and re-run.
+
+### Validate the cleaned result
+
+```{r validate}
+validate_dataset(out$data, config, "survey_2023.csv")
+#>
+#> ================================================
+#>  Validation Report: survey_2023.csv
+#> ================================================
+#>   Rows    : 20
+#>   Columns : year, kjonn, alder, yrkesstatus, siv, antpers, tob1
+#>
+#>   Missingness per column:
+#>     year                 0%
+#>     kjonn                0%
+#>     alder                0%
+#>     yrkesstatus          0%
+#>     siv                  5%   <-- 1 row could not be coerced
+#>     antpers              0%
+#>     tob1                 0%
+#>
+#>   Value conformance issues:
+#>     ⚠ tob1       unexpected: 8, 9     valid: 1, 2
+#> ================================================
+```
+
+### Write audit logs without running the full pipeline
+
+```{r export-log}
+# Useful after interactive exploration - produce the audit trail on demand
+export_match_log(
+  match_result  = match_result,
+  issues_dt     = out$issues,
+  dataset_label = "survey_2023.csv",
+  year_tag      = 2023L,
+  log_dir       = "logs/matching"
+)
+#> Log directory: C:/Projects/survey/logs/matching
+#>   Match log saved: .../match_log_survey_2023_csv.csv
+#>   Issues log saved: .../issues_survey_2023_csv.csv
+#>   Master log updated: .../match_log_MASTER.csv (6 total decisions)
+```
+
+### Review all decisions across datasets
+
+```{r summarise-log}
+summarise_master_log("logs/matching")
+#>
+#> ╔══════════════════════════════════════════════════════╗
+#>   MASTER AUDIT SUMMARY - All Datasets
+#> ╚══════════════════════════════════════════════════════╝
+#>
+#>   Decisions by match method (all datasets):
+#>     exact                          268
+#>     unmatched                      2
+#>     keyword [kjonn]                1
+#>
+#>   Columns flagged for review per dataset:
+#>     survey_2023.csv                     (year 2023): 1 column(s)
+#>     survey_2024.csv                     (year 2024): 1 column(s)
+#>
+#>   ⚠⚠ ALL PREDICTED (keyword) MATCHES - verify these:
+#>     [survey_2023.csv | 2023]  io_kjonn  -> kjonn  (keyword [kjonn])
+```
+
+---
+
+## Audit log files
+
+Three CSV files are maintained in `log_dir` throughout the life of a project:
+
+| File | Written | Purpose |
+|---|---|---|
+| `match_log_<dataset>.csv` | Once per dataset per run | Column-level matching decisions for one file |
+| `issues_<dataset>.csv` | When problems exist | Coercion failures and unexpected values |
+| `match_log_MASTER.csv` | Cumulative across all runs | All decisions from all datasets in one place |
+
+The master log is the primary audit tool. Open it in Excel or load it with
+`fread()` to see every decision made across all years. Re-running a dataset
+replaces its existing rows in the master log - no duplication.
+
+```{r read-master-log}
+master_log <- data.table::fread("logs/matching/match_log_MASTER.csv", quote = "")
+
+# All predicted matches - need human verification
+master_log[grepl("^keyword", method)]
+
+# All columns that were dropped because they could not be matched
+master_log[method == "unmatched", .(dataset, year, raw_name)]
+```
+
+---
+
+## Package functions
+
+| Function | Purpose |
+|---|---|
+| `load_config()` | Parse `variable_map.yml` into R lookup structures |
+| `match_columns()` | Map raw column names to canonical names (3 layers) |
+| `print_match_report()` | Print a formatted matching summary to the console |
+| `clean_dataset()` | Recode, coerce, and validate one dataset |
+| `validate_dataset()` | Print a post-clean quality report |
+| `export_match_log()` | Write per-dataset and master audit log CSVs |
+| `summarise_master_log()` | Print a cross-dataset summary from the master log |
+| `run_pipeline()` | Orchestrate all of the above for a manifest of files |
+| `build_keyword_patterns()` | Compile regex patterns from YAML keyword lists |
+
+Every function in this table is exported and can be called independently.
+See `vignette("cuci-introduction")` for detailed examples of when and why to
+use each one on its own.
+
+---
+
+## Getting help
+
+- `vignette("cuci-introduction")` - full walkthrough with single-function
+  examples and four common workflows
+- `?run_pipeline`, `?clean_dataset`, `?export_match_log` - function reference
+  pages
+- [GitHub Issues](https://github.com/folkehelsestats/cuci/issues) - bug
+  reports and feature requests
