@@ -1,0 +1,5 @@
+url: https://github.com/folkehelsestats/cuci
+template:
+  bootstrap: 5
+  assets:
+    - extra.css
