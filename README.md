@@ -1,7 +1,7 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# cuci <img src="man/img/cuci-hex.png" align="right" height="139" alt="cuci logo" />
+# cuci <a href="https://github.com/folkehelsestats/cuci"><img src="man/figures/logo.png" align="right" height="120" alt="cuci website" /></a>
 
 <!-- badges: start -->
 

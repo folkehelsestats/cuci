@@ -8,6 +8,7 @@ Description: Provides a pipeline for matching, recoding, type-coercing, and
     Supports three-layer column matching (exact, fuzzy, keyword), safe type
     conversion with warnings, value-label validation, recode tables, and
     structured audit logging.
+URL: https://folkehelsestats.github.io/cuci/, https://github.com/folkehelsestats/cuci
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)

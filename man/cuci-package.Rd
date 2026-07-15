@@ -6,7 +6,17 @@
 \alias{cuci-package}
 \title{cuci: Clean and Unify Collected Information}
 \description{
+\if{html}{\figure{logo.png}{options: style='float: right' alt='logo' width='120'}}
+
 Provides a pipeline for matching, recoding, type-coercing, and validating dataset columns based on a declarative YAML variable map. Supports three-layer column matching (exact, fuzzy, keyword), safe type conversion with warnings, value-label validation, recode tables, and structured audit logging.
+}
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://folkehelsestats.github.io/cuci/}
+  \item \url{https://github.com/folkehelsestats/cuci}
+}
+
 }
 \author{
 \strong{Maintainer}: Yusman Kamaleri \email{ybkamaleri@gmail.com}

@@ -19,7 +19,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-# cuci <img src="man/img/cuci-hex.png" align="right" height="139" alt="cuci logo" />
+# cuci <a href="https://github.com/folkehelsestats/cuci"><img src="man/figures/logo.png" align="right" height="120" alt="cuci website" /></a>
 
 <!-- badges: start -->
 [![R-CMD-check](https://github.com/folkehelsestats/cuci/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/folkehelsestats/cuci/actions/workflows/R-CMD-check.yaml)
