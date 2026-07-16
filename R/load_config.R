@@ -171,18 +171,32 @@
 #' @return Named list of `data.table`s (or `NULL` per variable).
 #' @keywords internal
 .build_value_map <- function(var_map) {
+  
   maps <- lapply(names(var_map), function(canonical) {
     value_list <- var_map[[canonical]]$value
     if (is.null(value_list)) return(NULL)
-
+    
     data.table::data.table(
-      num_value = as.integer(names(value_list)),
+      num_value = .chr_var(value_list, canonical),
       chr_value = as.character(unlist(value_list))
     )
   })
   stats::setNames(maps, names(var_map))
 }
 
+.chr_var <- function(x, canonical) {
+  y <- names(x)
+  tmp <- suppressWarnings(as.integer(y))
+
+  if (any(is.na(tmp))) {
+    warning("The 'value:' in ", canonical, " is strings keys. Consider using integer keys instead.")
+    num_value <- as.character(names(x))
+  } else {
+    num_value <- as.integer(names(x))
+  }
+
+  return(num_value)
+}
 
 # -----------------------------------------------------------------------------
 # .build_recode_map()
@@ -201,10 +215,11 @@
 #' @return Named list of `data.table`s (or `NULL` per variable).
 #' @keywords internal
 .build_recode_map <- function(var_map) {
+  
   maps <- lapply(names(var_map), function(canonical) {
     recode_list <- var_map[[canonical]]$recode
     if (is.null(recode_list)) return(NULL)
-
+    
     data.table::data.table(
       raw_value = names(recode_list),
       new_value = as.integer(unlist(recode_list))
@@ -212,6 +227,7 @@
   })
   stats::setNames(maps, names(var_map))
 }
+
 
 
 # -----------------------------------------------------------------------------
