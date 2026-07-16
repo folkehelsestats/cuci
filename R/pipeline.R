@@ -32,6 +32,7 @@
     ext,
     "csv"  = data.table::fread(path),
     "tsv"  = data.table::fread(path, sep = "\t"),
+    "rds"  = data.table::as.data.table(readRDS(path)),
     "xlsx" = {
       if (!requireNamespace("readxl", quietly = TRUE))
         stop("Package 'readxl' is needed for .xlsx files. ",

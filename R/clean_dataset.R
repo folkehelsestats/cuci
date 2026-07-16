@@ -125,7 +125,7 @@
     rc <- config$recode_map[[var]]
     if (is.null(rc)) next
     
-    raw_char  <- as.character(dt[[var]])
+    raw_char  <- .haven_class(dt[[var]])
     recode_lk <- stats::setNames(rc$new_value, rc$raw_value)
     recoded   <- recode_lk[raw_char]
     changed   <- !is.na(recoded)
@@ -134,6 +134,16 @@
   invisible(dt)
 }
 
+# problem to convert when the column is a haven_labelled vector, we need to
+# convert it to character first. Happens when the data is read from a SPSS, SAS
+# or Stata file. The function returns a character vector
+.haven_class <- function(x) {
+  if (inherits(x, "haven_labelled")) {
+    as.character(haven::zap_labels(x))
+  } else {
+    as.character(x)
+  }
+}
 
 # -----------------------------------------------------------------------------
 # .apply_missing_codes()
