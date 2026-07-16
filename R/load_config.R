@@ -189,7 +189,7 @@
   tmp <- suppressWarnings(as.integer(y))
 
   if (any(is.na(tmp))) {
-    warning("The 'value:' in ", canonical, " is strings keys. Consider using integer keys instead.")
+    warning("Config value for `", canonical, "` is strings keys. Consider using integer keys if possible.")
     num_value <- as.character(names(x))
   } else {
     num_value <- as.integer(names(x))
