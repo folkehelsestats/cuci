@@ -151,7 +151,7 @@ render_report <- function(
     output_file <- sprintf("report_%s.html", timestamp) # <- filename only
   }
 
-  cat("\n── Rendering audit report ──────────────────────────────────\n")
+  cat("\n-- Rendering audit report ----------------------------------\n")
   cat(sprintf("  Log dir    : %s\n", log_dir))
   cat(sprintf("  Output dir : %s\n", output_dir))
   cat(sprintf("  File       : %s\n", output_file))
