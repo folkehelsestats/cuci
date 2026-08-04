@@ -1,0 +1,341 @@
+---
+title: "Data Cleaning Report"
+subtitle: "Generated using [cuci](https://folkehelsestats.github.io/cuci) R package"
+date: "`r format(Sys.time(), '%d %B %Y, %H:%M')`"
+author: "`r Sys.info()[['user']]`"
+format:
+  html:
+    theme: cosmo
+    toc: true
+    toc-depth: 3
+    toc-location: left
+    toc-title: "Contents"
+    code-fold: true
+    code-summary: "Show code"
+    self-contained: true          # single portable HTML file
+    smooth-scroll: true
+    highlight-style: github
+    css: audit_report.css         # custom styles (generated alongside)
+execute:
+  echo: false
+  warning: false
+  message: false
+params:
+  log_dir: "logs/matching"        # path to matching logs folder
+  # Override from render call:
+  # quarto::quarto_render("audit_report.qmd", execute_params = list(log_dir = "logs/matching"))
+---
+
+```{r setup}
+library(data.table)
+library(DT)           # interactive tables
+library(ggplot2)      # charts
+library(scales)       # formatting helpers
+
+# ── Load master log ────────────────────────────────────────────────
+master_path <- file.path("O:\\Prosjekt\\Rusdata\\Rusundersokelsen\\Datasets\\temp\\logs\\match_log_MASTER.csv")
+# master_path <- file.path(params$log_dir, "match_log_MASTER.csv")
+
+if (!file.exists(master_path)) {
+  stop(sprintf(
+    "Master log not found at '%s'. Run the cleaning pipeline first.", master_path
+  ))
+}
+
+master <- fread(master_path)
+
+# ── Derived fields used throughout the report ─────────────────────
+
+# Confidence as an ordered factor for consistent sorting/colouring
+master[, confidence := factor(
+  confidence,
+  levels = c("high", "medium", "low", "none"),
+  ordered = TRUE
+)]
+
+# Traffic-light badge labels
+master[, badge := fcase(
+  method == "exact",           "Exact",
+  method == "fuzzy",           "Fuzzy",
+  grepl("^keyword", method),   "Predicted",
+  method == "unmatched",       "Unmatched",
+  default = "Unknown"
+)]
+
+# Counts used in summary boxes
+n_total     <- nrow(master)
+n_exact     <- master[badge == "Exact",     .N]
+n_fuzzy     <- master[badge == "Fuzzy",     .N]
+n_predicted <- master[badge == "Predicted", .N]
+n_unmatched <- master[badge == "Unmatched", .N]
+n_review    <- master[needs_review == TRUE, .N]
+n_datasets  <- master[, uniqueN(dataset)]
+```
+
+```{r helpers}
+# ── Inline HTML badge helper ───────────────────────────────────────
+badge_html <- function(label) {
+  colour <- switch(label,
+    "Exact"     = "#2e7d32",   # green
+    "Fuzzy"     = "#e65100",   # amber
+    "Predicted" = "#b71c1c",   # red
+    "Unmatched" = "#424242",   # grey
+    "#555"
+  )
+  sprintf(
+    '<span style="background:%s;color:#fff;padding:2px 8px;
+     border-radius:4px;font-size:0.78em;font-weight:600;
+     letter-spacing:0.04em">%s</span>',
+    colour, label
+  )
+}
+
+# Apply badge HTML to a vector (used in DT tables)
+badge_vec <- Vectorize(badge_html)
+```
+
+## Overview
+
+::: {.callout-note icon=false}
+This report summarises every column mapping decision made during the
+automated data cleaning pipeline. Rows flagged **Fuzzy** or **Predicted**
+require manual verification before the cleaned data is used for analysis.
+:::
+
+### Summary
+
+```{r summary-boxes}
+#| echo: false
+
+# Render four KPI cards as inline HTML
+cards <- list(
+  list(val = n_datasets,  lab = "Datasets processed",   col = "#1565c0"),
+  list(val = n_exact,     lab = "Exact matches",         col = "#2e7d32"),
+  list(val = n_fuzzy,     lab = "Fuzzy matches ⚠",      col = "#e65100"),
+  list(val = n_predicted, lab = "Predicted matches ⚠⚠", col = "#b71c1c")
+)
+
+htmltools::div(
+  class = "kpi-row",
+  lapply(cards, function(c) {
+    htmltools::div(
+      class = "kpi-box",
+      style = sprintf("border-top:4px solid %s", c$col),
+
+      htmltools::div(
+        class = "kpi-val",
+        style = sprintf("color:%s", c$col),
+        c$val
+      ),
+
+      htmltools::div(
+        class = "kpi-lab",
+        c$lab
+      )
+    )
+  })
+)
+```
+
+```{r review-alert}
+#| output: asis
+
+if (n_review > 0) {
+  cat(sprintf(
+    '::: {.callout-warning}\n**%d column mapping(s) require your review** 
+    (fuzzy + predicted matches combined). 
+    See the [Review Checklist](#review-checklist) section below.\n:::\n',
+    n_review
+  ))
+} else {
+  cat('::: {.callout-tip}\n✔ All column matches were exact — no manual review needed.\n:::\n')
+}
+```
+
+---
+
+### Match Method Breakdown
+
+```{r method-chart, fig.height=3.2, fig.width=7}
+method_counts <- master[, .N, by = badge]
+method_counts[, badge := factor(badge, levels = c("Exact","Fuzzy","Predicted","Unmatched"))]
+
+pal <- c(
+  "Exact"     = "#2e7d32",
+  "Fuzzy"     = "#e65100",
+  "Predicted" = "#b71c1c",
+  "Unmatched" = "#9e9e9e"
+)
+
+ggplot(method_counts, aes(x = badge, y = N, fill = badge)) +
+  geom_col(width = 0.55, show.legend = FALSE) +
+  geom_text(aes(label = N), vjust = -0.4, fontface = "bold", size = 4.2) +
+  scale_fill_manual(values = pal) +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.15))) +
+  labs(x = NULL, y = "Number of columns") +
+  theme_minimal(base_size = 13) +
+  theme(
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor   = element_blank(),
+    axis.text.x        = element_text(face = "bold")
+  )
+```
+
+---
+
+### Per-Dataset Summary
+
+```{r per-dataset-table}
+per_ds <- master[, .(
+  Total    = .N,
+  Exact    = sum(badge == "Exact"),
+  Fuzzy    = sum(badge == "Fuzzy"),
+  Predicted= sum(badge == "Predicted"),
+  Unmatched= sum(badge == "Unmatched"),
+  `Needs Review` = sum(needs_review)
+), by = .(Dataset = dataset, Year = year)][order(Year)]
+
+datatable(
+  per_ds,
+  rownames  = FALSE,
+  options   = list(dom = "t", pageLength = 20, ordering = TRUE),
+  class     = "stripe hover compact"
+) |>
+  formatStyle("Needs Review",
+    color            = styleInterval(0, c("inherit", "white")),
+    backgroundColor  = styleInterval(0, c("inherit", "#b71c1c")),
+    fontWeight       = "bold"
+  ) |>
+  formatStyle("Exact",
+    color = styleInterval(0, c("inherit", "#2e7d32")),
+    fontWeight = "bold"
+  )
+```
+
+---
+
+## Review Checklist {#review-checklist}
+
+Columns below were mapped by **fuzzy matching** (possible typos) or
+**keyword prediction** (semantic guessing). Tick off each one after
+verifying it is correct. If a mapping is wrong, add the correct alias
+to `config/variable_map.yaml` and re-run the pipeline.
+
+```{r review-table}
+review_dt <- master[needs_review == TRUE][order(confidence)]
+
+if (nrow(review_dt) == 0) {
+  cat("_No columns flagged for review._\n")
+} else {
+  display_dt <- review_dt[, .(
+    Dataset   = dataset,
+    Year      = year,
+    `Raw column`      = raw_name,
+    `Mapped to`       = canonical,
+    Method    = method,
+    Type      = badge,
+    Action    = action
+  )]
+
+  # Inject coloured badge HTML into the Type column
+  display_dt[, Type := badge_vec(Type)]
+
+  datatable(
+    display_dt,
+    escape    = FALSE,          # allow HTML badges to render
+    rownames  = FALSE,
+    filter    = "top",          # per-column filter boxes
+    options   = list(
+      pageLength = 15,
+      dom        = "Bfrtip",
+      buttons    = c("csv", "excel"),
+      columnDefs = list(
+        list(className = "dt-center", targets = c(1, 5))
+      )
+    ),
+    extensions = "Buttons",
+    class      = "stripe hover compact"
+  )
+}
+```
+
+---
+
+## Full Matching Log {#full-log}
+
+Every column from every dataset — exact matches included. Use the
+filters and search box to explore.
+
+```{r full-log-table}
+
+full_display <- master[, .(
+  Dataset        = dataset,
+  Year           = year,
+  `Raw column`   = raw_name,
+  `Canonical`    = canonical,
+  Method         = method,
+  Confidence     = as.character(confidence),
+  `Needs review` = needs_review,
+  Type           = badge,
+  Action         = action,
+  `Logged at`    = logged_at
+)]
+
+full_display[, Type := badge_vec(Type)]
+
+datatable(
+  full_display,
+  escape     = FALSE,
+  rownames   = FALSE,
+  filter     = "top",
+  options    = list(
+    pageLength = 20,
+    dom        = "Bfrtip",
+    buttons    = c("csv", "excel"),
+    scrollX    = TRUE
+  ),
+  extensions = "Buttons",
+  class      = "stripe hover compact"
+) |>
+  formatStyle("Needs review",
+    color           = styleEqual(c(TRUE, FALSE), c("white",  "inherit")),
+    backgroundColor = styleEqual(c(TRUE, FALSE), c("#b71c1c","inherit")),
+    fontWeight      = "bold"
+  )
+```
+
+---
+
+## Unmatched Columns {#unmatched}
+
+These columns could not be mapped to any canonical variable and were
+**dropped** from the clean dataset. If they should be retained, add
+them to `config/variable_map.yaml`.
+
+```{r unmatched-table}
+unmatched_dt <- master[badge == "Unmatched"]
+
+if (nrow(unmatched_dt) == 0) {
+  cat("_No unmatched columns — all raw columns were successfully mapped._\n")
+} else {
+  datatable(
+    unmatched_dt[, .(Dataset = dataset, Year = year, `Raw column` = raw_name)],
+    rownames = FALSE,
+    options  = list(dom = "frtip", pageLength = 20),
+    class    = "stripe hover compact"
+  )
+}
+```
+
+---
+
+## Pipeline Configuration
+
+```{r config-info}
+#| output: asis
+cat(sprintf("- **Log directory:** `%s`\n", params$log_dir))
+cat(sprintf("- **Master log:** `%s`\n", master_path))
+cat(sprintf("- **Report generated:** %s\n", format(Sys.time(), "%Y-%m-%d %H:%M:%S")))
+cat(sprintf("- **R version:** %s\n", R.version.string))
+cat(sprintf("- **data.table version:** %s\n", packageVersion("data.table")))
+```
