@@ -1,29 +1,49 @@
 ---
 title: "Data Cleaning Report"
-subtitle: "Generated using [cuci](https://folkehelsestats.github.io/cuci) R package"
-date: "`r format(Sys.time(), '%d %B %Y, %H:%M')`"
+subtitle: "Generated using [cuci](https://folkehelsestats.github.io/cuci)) R package"
+date: "`r format(Sys.time(), '%d %B %Y, %H:%:%M')`"
 author: "`r Sys.info()[['user']]`"
+
+
 format:
   html:
     theme: cosmo
+
+    # Layout
+    page-layout: full
+
+    # Wider content area
+    grid:
+      sidebar-width: 220px
+      body-width: 1600px
+      margin-width: 50px
+      gutter-width: 1rem
+
+    # TOC
     toc: true
     toc-depth: 3
     toc-location: left
     toc-title: "Contents"
+
+    # Code
     code-fold: true
     code-summary: "Show code"
-    self-contained: true          # single portable HTML file
+
+    # HTML options
+    self-contained: true
     smooth-scroll: true
     highlight-style: github
-    css: audit_report.css         # custom styles (generated alongside)
+
+    # Custom styles
+    css: audit_report.css
+
 execute:
   echo: false
   warning: false
   message: false
+
 params:
-  log_dir: "logs/matching"        # path to matching logs folder
-  # Override from render call:
-  # quarto::quarto_render("audit_report.qmd", execute_params = list(log_dir = "logs/matching"))
+  log_dir: "logs/matching"
 ---
 
 ```{r setup}
