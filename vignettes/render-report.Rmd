@@ -1,0 +1,151 @@
+---
+title: "Rendering Audit Reports"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Rendering Audit Reports}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+# Overview
+
+The **cuci** package can generate HTML audit reports summarizing the
+results of a column-matching workflow.
+
+The report is created using the bundled Quarto template and the matching
+log files produced during the workflow.
+
+The main function is:
+
+```{r}
+cuci::render_report
+```
+
+A successful rendering requires a log directory containing the master
+matching log:
+
+```
+match_log_MASTER.csv
+```
+
+# Requirements
+
+Report rendering requires a working installation of Quarto.
+
+The Quarto installation can be checked with:
+
+```{r, eval = FALSE}
+quarto::quarto_version()
+```
+
+If Quarto is not installed, download it from:
+
+<https://quarto.org/docs/get-started/>
+
+# Basic usage
+
+Assuming matching logs are stored in:
+
+```
+logs/matching/
+```
+
+and the directory contains:
+
+```
+logs/matching/
+└── match_log_MASTER.csv
+```
+
+a report can be generated with:
+
+```{r, eval = FALSE}
+library(cuci)
+
+render_report(
+  log_dir = "logs/matching"
+)
+```
+
+The function returns the path to the generated HTML report.
+
+```{r, eval = FALSE}
+report_path <- cuci::render_report(
+  log_dir = "logs/matching"
+)
+
+report_path
+```
+
+# Output location
+
+By default, the report is saved in the user's `Documents` directory.
+
+A custom output directory can be specified:
+
+```{r, eval = FALSE}
+render_report(
+  log_dir = "logs/matching",
+  output_dir = "reports"
+)
+```
+
+If the directory does not exist, `render_report()` asks for
+confirmation before creating it in an interactive session.
+
+To create directories automatically:
+
+```{r, eval = FALSE}
+render_report(
+  log_dir = "logs/matching",
+  output_dir = "reports",
+  create_dir = TRUE
+)
+```
+
+# Custom filenames
+
+The output filename can be specified using `output_file`:
+
+```{r, eval = FALSE}
+render_report(
+  log_dir = "logs/matching",
+  output_dir = "reports",
+  output_file = "audit_report.html"
+)
+```
+
+# Automated workflows
+
+For scripts or automated pipelines, disable browser opening and avoid
+interactive prompts:
+
+```{r, eval = FALSE}
+render_report(
+  log_dir = "logs/matching",
+  output_dir = "reports",
+  output_file = "audit_report.html",
+  create_dir = TRUE,
+  open_browser = FALSE
+)
+```
+
+# Rendering process
+
+During rendering, the package:
+
+1. Copies the bundled Quarto template and associated resources to a
+   temporary directory.
+2. Renders the report using Quarto.
+3. Copies the generated HTML file to the requested output location.
+4. Removes temporary files.
+
+This ensures that package-installed files are not modified during report
+generation.
