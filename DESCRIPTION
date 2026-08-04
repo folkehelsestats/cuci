@@ -15,7 +15,9 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.1
 Imports:
     data.table (>= 1.14.0),
+    fs (>= 2.1.0),
     haven (>= 2.5.5),
+    withr (>= 3.0.3),
     yaml (>= 2.3.0)
 Suggests:
     readxl,
