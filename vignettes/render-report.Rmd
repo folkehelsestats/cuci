@@ -20,16 +20,16 @@ The **cuci** package can generate HTML audit reports summarizing the
 results of a column-matching workflow.
 
 The report is created using the bundled Quarto template and the matching
-log files produced during the workflow.
+log files produced during the workflow pipeline.
 
-The main function is:
+The main function to generate report is:
 
-```{r}
-cuci::render_report
+```{r, eval = FALSE}
+cuci::render_report()
 ```
 
 A successful rendering requires a log directory containing the master
-matching log:
+matching log file that is created automatically during data cleaning with `run_pipeline()`:
 
 ```
 match_log_MASTER.csv
@@ -112,7 +112,7 @@ render_report(
 
 # Custom filenames
 
-The output filename can be specified using `output_file`:
+The output filename can be specified using `output_file` else use the default file naming with current date:
 
 ```{r, eval = FALSE}
 render_report(
@@ -137,15 +137,3 @@ render_report(
 )
 ```
 
-# Rendering process
-
-During rendering, the package:
-
-1. Copies the bundled Quarto template and associated resources to a
-   temporary directory.
-2. Renders the report using Quarto.
-3. Copies the generated HTML file to the requested output location.
-4. Removes temporary files.
-
-This ensures that package-installed files are not modified during report
-generation.
