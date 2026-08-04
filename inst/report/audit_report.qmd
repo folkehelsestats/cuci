@@ -43,7 +43,7 @@ execute:
   message: false
 
 params:
-  log_dir: "logs/matching"
+  log_dir: null 
 ---
 
 ```{r setup}
@@ -52,9 +52,12 @@ library(DT)           # interactive tables
 library(ggplot2)      # charts
 library(scales)       # formatting helpers
 
-# ── Load master log ────────────────────────────────────────────────
-master_path <- file.path("O:\\Prosjekt\\Rusdata\\Rusundersokelsen\\Datasets\\temp\\logs\\match_log_MASTER.csv")
-# master_path <- file.path(params$log_dir, "match_log_MASTER.csv")
+# -- Load master log ------------------------------------------------
+if (is.null(params$log_dir)) {
+  stop("No log directory supplied. Please provide log_dir when rendering the report.")
+}
+
+master_path <- file.path(params$log_dir, "match_log_MASTER.csv")
 
 if (!file.exists(master_path)) {
   stop(sprintf(
@@ -64,7 +67,7 @@ if (!file.exists(master_path)) {
 
 master <- fread(master_path)
 
-# ── Derived fields used throughout the report ─────────────────────
+# -- Derived fields used throughout the report ---------------------
 
 # Confidence as an ordered factor for consistent sorting/colouring
 master[, confidence := factor(
@@ -93,7 +96,7 @@ n_datasets  <- master[, uniqueN(dataset)]
 ```
 
 ```{r helpers}
-# ── Inline HTML badge helper ───────────────────────────────────────
+# -- Inline HTML badge helper ---------------------------------------
 badge_html <- function(label) {
   colour <- switch(label,
     "Exact"     = "#2e7d32",   # green
