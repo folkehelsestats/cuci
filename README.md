@@ -113,9 +113,7 @@ Provide a manifest table with one row per raw file and the year it
 belongs to.
 
 ``` r
-library(data.table)
-
-manifest <- data.table(
+manifest <- data.frame(
   path     = c(
     "data/raw/survey_2023.csv",
     "data/raw/survey_2024.csv"
