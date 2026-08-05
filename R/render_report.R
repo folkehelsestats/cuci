@@ -194,7 +194,7 @@ render_report <- function(
   if (file.exists(final_path)) {
     size_kb <- round(file.size(final_path) / 1024, 1)
     cat(sprintf("\n Report rendered: %s (%.1f KB)\n", final_path, size_kb))
-    if (open_browser) browseURL(final_path)
+    if (open_browser) utils::browseURL(final_path)
   } else {
     warning("Rendering completed but output file was not found at: ", final_path)
   }

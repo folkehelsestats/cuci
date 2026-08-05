@@ -139,7 +139,7 @@ library(cuci)
 library(data.table)
 
 # Build a manifest: one row per raw survey file
-manifest <- data.table(
+manifest <- data.frame(
   path     = c(
     "data/raw/survey_2022.csv",
     "data/raw/survey_2023.csv",
@@ -255,7 +255,7 @@ a raw file after normalisation) and returns a matching decision for each one.
 library(data.table)
 
 # Read a raw file and normalise its column names
-raw <- fread("data/raw/survey_2023.csv")
+raw <- data.table::fread("data/raw/survey_2023.csv")
 
 # See what names the file actually has
 names(raw)
@@ -316,7 +316,7 @@ print_match_report(result, dataset_label = "survey_2023.csv")
 with two elements: the cleaned data and an issues table.
 
 ```{r}
-raw <- fread("data/raw/survey_2023.csv")
+raw <- data.table::fread("data/raw/survey_2023.csv")
 
 out <- clean_dataset(
   dt            = raw,
@@ -426,7 +426,7 @@ validate_dataset(existing, config, "survey_2023_clean.csv")
   its old rows rather than duplicating them.
 
 ```{r}
-raw <- fread("data/raw/survey_2023.csv")
+raw <- data.table::fread("data/raw/survey_2023.csv")
 
 # Step 1: match column names
 match_result <- match_columns(
@@ -533,7 +533,7 @@ library(cuci)
 library(data.table)
 
 config <- load_config("config/variable_map.yml")
-raw    <- fread("data/raw/new_survey.csv")
+raw    <- data.table::fread("data/raw/new_survey.csv")
 
 # Step 1: see what columns the file has and how they match
 match_result <- match_columns(tolower(names(raw)), config)
@@ -570,7 +570,7 @@ config$value_map$tob1      # what values are currently declared valid
 config$missing_map$tob1    # what values are declared as missing codes
 
 # Load one problem file and look at the raw tob1 column
-raw <- fread("data/raw/survey_2023.csv")
+raw <- data.table::fread("data/raw/survey_2023.csv")
 table(raw$Tob1, useNA = "always")
 #>  1  2  8  9 <NA>
 #> 14  4  1  1    0

@@ -300,7 +300,7 @@ load_config <- function(config_file = "config/variable_map.yml") {
   list(
     name_lookup      = .build_name_lookup(var_map),
     label_lookup     = .build_label_lookup(var_map),
-    keyword_patterns = build_keyword_patterns(list(var_map = var_map)),
+    keyword_patterns = .build_keyword_patterns(list(var_map = var_map)),
     recode_map       = .build_recode_map(var_map),
     value_map        = .build_value_map(var_map),
     missing_map      = .build_missing_map(var_map),

@@ -6,15 +6,15 @@
 # Public API:
 #   match_columns()          - orchestrator; runs all three layers in order
 #   print_match_report()     - console summary of matching decisions
-#   build_keyword_patterns() - compile regex patterns from YAML keywords
 #
 # Internal helpers:
-#   .build_match_row()       - construct one log data.table row
-#   .match_exact()           - layer 1: lookup against known aliases
-#   .match_fuzzy()           - layer 2: Levenshtein edit-distance via agrep()
-#   .find_matched_keyword()  - identify which plain keyword triggered a match
-#   .match_keyword()         - layer 3: regex pattern search
-#   .compile_match_result()  - assemble rename_vec and unmatched from the log
+#   .build_keyword_patterns() - compile regex patterns from YAML keywords
+#   .build_match_row()        - construct one log data.table row
+#   .match_exact()            - layer 1: lookup against known aliases
+#   .match_fuzzy()            - layer 2: Levenshtein edit-distance via agrep()
+#   .find_matched_keyword()   - identify which plain keyword triggered a match
+#   .match_keyword()          - layer 3: regex pattern search
+#   .compile_match_result()   - assemble rename_vec and unmatched from the log
 # =============================================================================
 
 
@@ -299,6 +299,46 @@
 
 
 # -----------------------------------------------------------------------------
+# .build_keyword_patterns()
+# -----------------------------------------------------------------------------
+#' Build regex keyword patterns from a variable map config
+#'
+#' For each variable with a `keywords:` block, produces a single regex that
+#' matches any of those keywords as a substring not immediately surrounded by
+#' other alphanumeric characters (so `kjonn` matches `io_kjonn` but not
+#' `kjonnstudie`).
+#'
+#' @param config   List with a `$var_map` element (from [load_config()]).
+#' @param min_char Minimum keyword length to include. Default `3`.
+#'
+#' @return Named list of regex strings; variables without usable keywords are
+#'   omitted.
+#' @keywords internal
+.build_keyword_patterns <- function(config, min_char = 3) {
+
+  patterns <- lapply(config$var_map, function(var_def) {
+
+    kws <- var_def$keywords
+    if (is.null(kws) || all(is.na(kws))) return(NULL)
+
+    kws <- as.character(kws)
+    kws <- tolower(trimws(kws))
+    kws <- kws[!kws %in% c("", "na", "null", "none") & !is.na(kws)]
+    kws <- kws[nchar(kws) >= min_char]
+    if (length(kws) == 0) return(NULL)
+
+    # Escape regex metacharacters in keyword strings
+    kws <- gsub("([.^$*+?()\\[{\\\\|])", "\\\\\\1", kws)
+
+    # Lookahead/lookbehind instead of \b: underscore is a \w character so
+    # \b would NOT fire between "_" and "k" in "io_kjonn".
+    paste0("(?<![a-z0-9])(", paste(unique(kws), collapse = "|"), ")(?![a-z0-9])")
+  })
+
+  Filter(Negate(is.null), patterns)
+}
+
+# -----------------------------------------------------------------------------
 # match_columns()   [PUBLIC]
 # -----------------------------------------------------------------------------
 #' Match raw column names to canonical variable names
@@ -434,43 +474,3 @@ print_match_report <- function(match_result, dataset_label = "") {
   invisible()
 }
 
-
-# -----------------------------------------------------------------------------
-# build_keyword_patterns()   [PUBLIC]
-# -----------------------------------------------------------------------------
-#' Build regex keyword patterns from a variable map config
-#'
-#' For each variable with a `keywords:` block, produces a single regex that
-#' matches any of those keywords as a substring not immediately surrounded by
-#' other alphanumeric characters (so `kjonn` matches `io_kjonn` but not
-#' `kjonnstudie`).
-#'
-#' @param config   List with a `$var_map` element (from [load_config()]).
-#' @param min_char Minimum keyword length to include. Default `3`.
-#'
-#' @return Named list of regex strings; variables without usable keywords are
-#'   omitted.
-#' @export
-build_keyword_patterns <- function(config, min_char = 3) {
-
-  patterns <- lapply(config$var_map, function(var_def) {
-
-    kws <- var_def$keywords
-    if (is.null(kws) || all(is.na(kws))) return(NULL)
-
-    kws <- as.character(kws)
-    kws <- tolower(trimws(kws))
-    kws <- kws[!kws %in% c("", "na", "null", "none") & !is.na(kws)]
-    kws <- kws[nchar(kws) >= min_char]
-    if (length(kws) == 0) return(NULL)
-
-    # Escape regex metacharacters in keyword strings
-    kws <- gsub("([.^$*+?()\\[{\\\\|])", "\\\\\\1", kws)
-
-    # Lookahead/lookbehind instead of \b: underscore is a \w character so
-    # \b would NOT fire between "_" and "k" in "io_kjonn".
-    paste0("(?<![a-z0-9])(", paste(unique(kws), collapse = "|"), ")(?![a-z0-9])")
-  })
-
-  Filter(Negate(is.null), patterns)
-}
