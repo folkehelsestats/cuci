@@ -1,5 +1,3 @@
-library(testthat)
-library(data.table)
 
 yml_path <- system.file("extdata", "variable_map.yml", package = "cuci")
 csv_path <- system.file("extdata", "test-data.csv",    package = "cuci")
@@ -55,17 +53,17 @@ test_that("load_config errors on missing file", {
 
 
 # ============================================================
-# build_keyword_patterns
+# .build_keyword_patterns
 # ============================================================
 
-test_that("build_keyword_patterns returns a named list of strings", {
+test_that(".build_keyword_patterns returns a named list of strings", {
   cfg <- load_config(yml_path)
-  p   <- build_keyword_patterns(cfg)
+  p   <- .build_keyword_patterns(cfg)
   expect_type(p, "list")
   expect_true(all(vapply(p, is.character, logical(1))))
 })
 
-test_that("build_keyword_patterns pattern matches expected column forms", {
+test_that(".build_keyword_patterns pattern matches expected column forms", {
   cfg <- load_config(yml_path)
   p   <- cfg$keyword_patterns[["kjonn"]]
   expect_true(grepl(p, "io_kjonn",   perl = TRUE, ignore.case = TRUE))

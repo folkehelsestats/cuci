@@ -20,3 +20,4 @@ Applies \code{rename_vec} (a named character vector \code{old -> new}) to \code{
 exists in \code{dt}; silently skips the rest so this function is safe to call
 with a rename_vec built from a different dataset.
 }
+\keyword{internal}

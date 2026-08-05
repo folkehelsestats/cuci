@@ -72,6 +72,7 @@
 #' @param dt         A data.table (modified by reference).
 #' @param rename_vec Named character vector from `match_result$rename_vec`.
 #' @return `dt` invisibly (modification is in-place).
+#' @keywords internal
 .apply_renames <- function(dt, rename_vec) {
   if (length(rename_vec) == 0) return(invisible(dt))
 

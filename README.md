@@ -353,7 +353,7 @@ master_log[method == "unmatched", .(dataset, year, raw_name)]
 | `export_match_log()` | Write per-dataset and master audit log CSVs |
 | `summarise_master_log()` | Print a cross-dataset summary from the master log |
 | `run_pipeline()` | Orchestrate all of the above for a manifest of files |
-| `build_keyword_patterns()` | Compile regex patterns from YAML keyword lists |
+| `.build_keyword_patterns()` | Compile regex patterns from YAML keyword lists |
 
 Every function in this table is exported and can be called
 independently. See `vignette("cuci-introduction")` for detailed examples
