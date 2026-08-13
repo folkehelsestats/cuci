@@ -4,7 +4,7 @@
 \alias{apply_labels}
 \title{Apply Variable and Value Labels}
 \usage{
-apply_labels(df, config)
+apply_labels(df, config, strict = TRUE)
 }
 \arguments{
 \item{df}{A data frame.}
@@ -12,13 +12,17 @@ apply_labels(df, config)
 \item{config}{A configuration object containing:
 \describe{
 \item{label_lookup}{
-A named list of variable labels.
+Named list of variable labels.
 }
 \item{value_map}{
-A named list of value mappings. Each mapping must contain
+Named list of value-label mappings. Each mapping must contain
 columns \code{num_value} and \code{chr_value}.
 }
 }}
+
+\item{strict}{Logical. If \code{TRUE}, variables containing values
+not present in \code{value_map$num_value} will trigger an error.
+If \code{FALSE}, invalid values are converted to \code{NA}.}
 }
 \value{
 A data frame with variable labels and value labels applied.
@@ -31,29 +35,32 @@ configuration object.
 Variable labels are retrieved from \code{config$label_lookup}.
 Value labels are retrieved from \code{config$value_map}.
 
-Variables without a value map will still receive a variable label
-if one is defined in \code{config$label_lookup}.
+Variables without a value map will still receive a variable label if
+one is defined in \code{config$label_lookup}.
+
+When \code{strict = TRUE}, variables containing values not defined in
+the corresponding value map will trigger an error.
+
+When \code{strict = FALSE}, values not defined in the value map are
+converted to \code{NA} and processing continues.
 }
 \examples{
 cfg <- list(
   label_lookup = list(
-    kjonn = "IOs kjønn",
-    alder = "IOs alder"
+    kjonn = "IOs kjønn"
   ),
   value_map = list(
     kjonn = data.frame(
-      num_value = c(1, 2),
+      num_value = c(1L, 2L),
       chr_value = c("Mann", "Kvinne")
-    ),
-    alder = NULL
+    )
   )
 )
 
 df <- data.frame(
-  kjonn = c(1, 2, 1),
-  alder = c(25, 34, 41)
+  kjonn = c("1", "2", "D")
 )
 
-df <- apply_labels(df, cfg)
+apply_labels(df, cfg, strict = FALSE)
 
 }
