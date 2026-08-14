@@ -1,4 +1,4 @@
-testthat::test_that("make_sum returns counts and percentages", {
+testthat::test_that("sum_up returns counts and percentages", {
 
   dt <- data.table::data.table(
     kjonn = c(1, 2, 1, 2, 1)
@@ -13,7 +13,7 @@ testthat::test_that("make_sum returns counts and percentages", {
     )
   )
 
-  res <- make_sum(dt, kjonn, cfg)
+  res <- sum_up(dt, kjonn, cfg)
 
   testthat::expect_s3_class(res, "data.table")
 
@@ -28,7 +28,7 @@ testthat::test_that("make_sum returns counts and percentages", {
   )
 })
 
-testthat::test_that("make_sum applies labels when category = TRUE", {
+testthat::test_that("sum_up applies labels when category = TRUE", {
 
   dt <- data.table::data.table(
     kjonn = c(1, 2, 1, 2, 1)
@@ -43,7 +43,7 @@ testthat::test_that("make_sum applies labels when category = TRUE", {
     )
   )
 
-  res <- make_sum(
+  res <- sum_up(
     dt,
     kjonn,
     cfg,
@@ -63,7 +63,7 @@ testthat::test_that("make_sum applies labels when category = TRUE", {
   )
 })
 
-testthat::test_that("make_sum handles haven_labelled variables", {
+testthat::test_that("sum_up handles haven_labelled variables", {
 
   dt <- data.table::data.table(
     kjonn = haven::labelled(
@@ -84,7 +84,7 @@ testthat::test_that("make_sum handles haven_labelled variables", {
     )
   )
 
-  res <- make_sum(
+  res <- sum_up(
     dt,
     kjonn,
     cfg,
@@ -104,7 +104,7 @@ testthat::test_that("make_sum handles haven_labelled variables", {
   )
 })
 
-testthat::test_that("make_sum accepts data.frame input", {
+testthat::test_that("sum_up accepts data.frame input", {
 
   dt <- data.frame(
     kjonn = c(1, 2, 1, 2, 1)
@@ -119,7 +119,7 @@ testthat::test_that("make_sum accepts data.frame input", {
     )
   )
 
-  res <- make_sum(dt, kjonn, cfg)
+  res <- sum_up(dt, kjonn, cfg)
 
   testthat::expect_s3_class(
     res,
@@ -132,7 +132,7 @@ testthat::test_that("make_sum accepts data.frame input", {
   )
 })
 
-testthat::test_that("make_sum rounds percentages according to digits", {
+testthat::test_that("sum_up rounds percentages according to digits", {
 
   dt <- data.table::data.table(
     grp = c(1, 1, 2)
@@ -147,7 +147,7 @@ testthat::test_that("make_sum rounds percentages according to digits", {
     )
   )
 
-  res <- make_sum(
+  res <- sum_up(
     dt,
     grp,
     cfg,
@@ -160,7 +160,7 @@ testthat::test_that("make_sum rounds percentages according to digits", {
   )
 })
 
-testthat::test_that("make_sum errors when value_map is missing", {
+testthat::test_that("sum_up errors when value_map is missing", {
 
   dt <- data.table::data.table(
     kjonn = c(1, 2)
@@ -171,12 +171,12 @@ testthat::test_that("make_sum errors when value_map is missing", {
   )
 
   testthat::expect_error(
-    make_sum(dt, kjonn, cfg),
+    sum_up(dt, kjonn, cfg),
     "No value_map found for variable 'kjonn'"
   )
 })
 
-testthat::test_that("make_sum errors when dt is not a data.frame or data.table", {
+testthat::test_that("sum_up errors when dt is not a data.frame or data.table", {
 
   cfg <- list(
     value_map = list(
@@ -188,7 +188,7 @@ testthat::test_that("make_sum errors when dt is not a data.frame or data.table",
   )
 
   testthat::expect_error(
-    make_sum(
+    sum_up(
       dt = c(1, 2, 3),
       kjonn,
       cfg

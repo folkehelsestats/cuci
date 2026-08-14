@@ -1,5 +1,5 @@
 
-#' Count observations and calculate percentages
+#' Summarise Observations
 #'
 #' Counts the number of observations for a variable and calculates the
 #' corresponding percentages. Optionally converts the grouping variable
@@ -11,7 +11,7 @@
 #'
 #' @param dt A `data.table` or `data.frame`. If a `data.frame` is supplied,
 #'   it is converted internally to a `data.table`.
-#' @param var Variable to summarize. Unquoted column name.
+#' @param var Variable to sum_up. Unquoted column name.
 #' @param config Configuration list containing `value_map`.
 #' @param category Logical. If `TRUE`, convert the grouping variable to a
 #'   factor using labels from `config$value_map`.
@@ -53,18 +53,19 @@
 #'   )
 #' )
 #'
-#' make_sum(dt, kjonn, cfg)
+#' sum_up(dt, kjonn, cfg)
 #'
-#' make_sum(dt, kjonn, cfg, category = TRUE)
+#' sum_up(dt, kjonn, cfg, category = TRUE)
 #'
 #' @export
-make_sum <- function(dt,
-                     var,
-                     config,
-                     category = FALSE,
-                     digits = 1) {
+sum_up <- function(dt,
+                   var,
+                   config,
+                   category = FALSE,
+                   digits = 1) {
 
-
+  n <- pct <- NULL
+  
   if (!inherits(dt, c("data.frame", "data.table"))) {
     stop(
       "`dt` must be a data.frame or data.table.",
@@ -105,3 +106,11 @@ make_sum <- function(dt,
 
   res[]
 }
+
+#' @export
+#' @rdname sum_up 
+summarise <- sum_up
+
+#' @export
+#' @rdname sum_up 
+summarize <- sum_up
