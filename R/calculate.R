@@ -41,7 +41,7 @@
 #' library(data.table)
 #'
 #' dt <- data.table(
-#'   kjonn = c(1, 2, 1, 2, 1)
+#'   kjonn = c(1, 2, 1, 2, 1, 1, 2, 2, 1, 2)
 #' )
 #'
 #' cfg <- list(
