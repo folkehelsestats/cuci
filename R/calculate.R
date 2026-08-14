@@ -55,12 +55,7 @@
 #'
 #' make_sum(dt, kjonn, cfg)
 #'
-#' make_sum(
-#'   dt,
-#'   kjonn,
-#'   cfg,
-#'   category = TRUE
-#' )
+#' make_sum(dt, kjonn, cfg, category = TRUE)
 #'
 #' @export
 make_sum <- function(dt,
