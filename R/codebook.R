@@ -32,6 +32,7 @@
 #' df <- read_dta("yourfile.dta")
 #' make_codebook(df)
 #' }
+#'
 #' @export
 make_codebook <- function(d, config = NULL, page = 25, save = FALSE) {
 
