@@ -9,7 +9,7 @@ apply_labels(df, config, strict = TRUE)
 \arguments{
 \item{df}{A data frame.}
 
-\item{config}{A configuration object containing:
+\item{config}{A configuration object or path to YAML file containing:
 \describe{
 \item{label_lookup}{
 Named list of variable labels.
