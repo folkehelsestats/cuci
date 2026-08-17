@@ -45,7 +45,7 @@ When \code{strict = FALSE}, values not defined in the value map are
 converted to \code{NA} and processing continues.
 }
 \examples{
-cfg <- list(
+cfg <- structure(list(
   label_lookup = list(
     kjonn = "IOs kjønn"
   ),
@@ -55,7 +55,7 @@ cfg <- list(
       chr_value = c("Mann", "Kvinne")
     )
   )
-)
+), class = "cc_config")
 
 df <- data.frame(
   kjonn = c("1", "2", "D")

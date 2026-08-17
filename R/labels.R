@@ -33,7 +33,7 @@
 #' @return A data frame with variable labels and value labels applied.
 #'
 #' @examples
-#' cfg <- list(
+#' cfg <- structure(list(
 #'   label_lookup = list(
 #'     kjonn = "IOs kjønn"
 #'   ),
@@ -43,7 +43,7 @@
 #'       chr_value = c("Mann", "Kvinne")
 #'     )
 #'   )
-#' )
+#' ), class = "cc_config")
 #'
 #' df <- data.frame(
 #'   kjonn = c("1", "2", "D")
