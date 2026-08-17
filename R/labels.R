@@ -16,7 +16,7 @@
 #' converted to `NA` and processing continues.
 #'
 #' @param df A data frame.
-#' @param config A configuration object containing:
+#' @param config A configuration object or path to YAML file containing:
 #'   \describe{
 #'     \item{label_lookup}{
 #'       Named list of variable labels.
@@ -55,6 +55,10 @@
 apply_labels <- function(df,
                          config,
                          strict = TRUE) {
+
+  if (!inherits(config, "cc_config")) {
+    config <- load_config(config)
+  }
 
   for (var in names(config$label_lookup)) {
 

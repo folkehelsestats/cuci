@@ -2,7 +2,7 @@ testthat::test_that(
   "apply_labels adds variable and value labels",
   {
 
-    cfg <- list(
+    cfg <- structure(list(
       label_lookup = list(
         kjonn = "IOs kjønn"
       ),
@@ -15,7 +15,7 @@ testthat::test_that(
           )
         )
       )
-    )
+    ), class = "cc_config")
 
     df <- data.frame(
       kjonn = c(1L, 2L, 1L)
@@ -47,14 +47,14 @@ testthat::test_that(
   "apply_labels adds variable label when value_map is NULL",
   {
 
-    cfg <- list(
+    cfg <- structure(list(
       label_lookup = list(
         alder = "IOs alder"
       ),
       value_map = list(
         alder = NULL
       )
-    )
+    ), class = "cc_config")
 
     df <- data.frame(
       alder = c(20, 30, 40)
@@ -80,7 +80,7 @@ testthat::test_that(
   "strict TRUE errors when undefined values exist",
   {
 
-    cfg <- list(
+    cfg <- structure(list(
       label_lookup = list(
         yrkesstatus = "Er du yrkesaktiv?"
       ),
@@ -100,7 +100,7 @@ testthat::test_that(
           )
         )
       )
-    )
+    ), class = "cc_config")
 
     df <- data.frame(
       yrkesstatus = c(
@@ -127,7 +127,7 @@ testthat::test_that(
   "strict FALSE converts undefined values to NA",
   {
 
-    cfg <- list(
+    cfg <- structure(list(
       label_lookup = list(
         yrkesstatus = "Er du yrkesaktiv?"
       ),
@@ -147,7 +147,7 @@ testthat::test_that(
           )
         )
       )
-    )
+    ), class = "cc_config")
 
     df <- data.frame(
       yrkesstatus = c(
@@ -197,7 +197,7 @@ testthat::test_that(
   "apply_labels supports character value labels",
   {
 
-    cfg <- list(
+    cfg <- structure(list(
       label_lookup = list(
         tett_spredt = "Type bosted"
       ),
@@ -214,7 +214,7 @@ testthat::test_that(
           stringsAsFactors = FALSE
         )
       )
-    )
+    ), class = "cc_config")
 
     df <- data.frame(
       tett_spredt = c(
@@ -251,14 +251,14 @@ testthat::test_that(
   "warning is issued when variable from config is missing",
   {
 
-    cfg <- list(
+    cfg <- structure(list(
       label_lookup = list(
         alder = "IOs alder"
       ),
       value_map = list(
         alder = NULL
       )
-    )
+    ), class = "cc_config")
 
     df <- data.frame(
       kjonn = c(1L, 2L)

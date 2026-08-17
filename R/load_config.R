@@ -296,15 +296,19 @@ load_config <- function(config_file = "config/variable_map.yml") {
   # 1. Read YAML safely (handles UTF-8 / Norwegian chars on Windows)
   var_map <- .read_yaml_utf8(config_file)
 
+
   # 2. Build each lookup structure via its own focused helper
-  list(
-    name_lookup      = .build_name_lookup(var_map),
-    label_lookup     = .build_label_lookup(var_map),
-    keyword_patterns = .build_keyword_patterns(list(var_map = var_map)),
-    recode_map       = .build_recode_map(var_map),
-    value_map        = .build_value_map(var_map),
-    missing_map      = .build_missing_map(var_map),
-    type_map         = .build_type_map(var_map),
-    var_map          = var_map
+  structure(
+    list(
+      name_lookup      = .build_name_lookup(var_map),
+      label_lookup     = .build_label_lookup(var_map),
+      keyword_patterns = .build_keyword_patterns(list(var_map = var_map)),
+      recode_map       = .build_recode_map(var_map),
+      value_map        = .build_value_map(var_map),
+      missing_map      = .build_missing_map(var_map),
+      type_map         = .build_type_map(var_map),
+      var_map          = var_map
+    ),
+    class = "cc_config"
   )
 }
