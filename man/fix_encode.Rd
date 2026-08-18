@@ -14,25 +14,22 @@ A character vector of the same length as \code{x}, with corrected
 encoding.
 }
 \description{
-Repairs strings where Norwegian letters (\eqn{\text{ae, AE, aa, AA, oe, OE}})
-have been mangled by encoding mismatches — typically UTF-8 bytes misread as
+Repairs strings where Norwegian letters (\eqn{\text{æ, Æ, å, Å, ø, Ø}})
+have been mangled by encoding mismatches, typically UTF-8 bytes misread as
 Latin-1/Windows-1252 (double-encoding), or raw Latin-1 bytes read directly.
 This is a common issue when reading survey data exported from systems with
 inconsistent encoding handling.
 }
 \details{
-The function corrects two classes of problems, applied in sequence via
-\code{\link[=Reduce]{Reduce()}}:
-\itemize{
-\item \strong{Double-encoded UTF-8}: e.g. the UTF-8 bytes for "ae"
-(\code{C3 A6}) get misread as Latin-1 and re-encoded as two separate
-characters, displaying as \code{"\u00c3\u00a6"}. These are mapped back
-to the correct single character.
-\item \strong{Raw Latin-1 / Windows-1252 bytes}: e.g. \code{"\xe6"} is
-mapped directly to \code{"\u00e6"}.
-}
+The function corrects two classes of problems, applied in sequence
+via \code{\link[=Reduce]{Reduce()}}: \itemize{ \item \strong{Double-encoded UTF-8}: e.g. the
+UTF-8 bytes for "æ" (\code{C3 A6}) get misread as Latin-1 and re-encoded as
+two separate characters ie. a and e, displaying as \code{"\u00c3\u00a6"}.
+These are mapped back to the correct single character. \item \strong{Raw
+Latin-1 / Windows-1252 bytes}: e.g. \code{"\xe6"} is mapped directly to
+\code{"\u00e6"}. }
 
-\strong{Uppercase AE is a special case.} Its UTF-8 bytes are \code{C3 86}.
+\strong{Uppercase Æ is a special case.} Its UTF-8 bytes are \code{C3 86}.
 When double-encoded, \code{C3} becomes \code{"\u00c3"} as usual, but byte
 \code{86} is interpreted differently depending on the assumed source
 encoding: it is unassigned in strict ISO-8859-1, but decodes to
