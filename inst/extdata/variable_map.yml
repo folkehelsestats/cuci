@@ -83,5 +83,6 @@ tob1:
     1: "Ja"
     2: "Nei"
   recode: ~
-  missing:
-
+  missing: ~
+  comment:
+    Only for 2026 dataset

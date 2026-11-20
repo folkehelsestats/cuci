@@ -9,7 +9,8 @@ csv_path <- system.file("extdata", "test-data.csv",    package = "cuci")
 test_that("load_config returns all expected list elements", {
   cfg <- load_config(yml_path)
   expect_named(cfg, c("name_lookup","label_lookup","keyword_patterns",
-                       "recode_map","value_map","missing_map","type_map","var_map"))
+                       "recode_map","value_map","missing_map","type_map",
+                      "comment_map", "var_map"))
 })
 
 test_that("load_config name_lookup includes normalised alias forms", {

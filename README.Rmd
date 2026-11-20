@@ -91,6 +91,7 @@ alder:
   recode: ~
   missing:
     - 99
+  comment: Only in 2026 dataset
 ```
 
 Each top-level key (`kjonn`, `alder`, …) is the **canonical name** - the name

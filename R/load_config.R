@@ -15,6 +15,7 @@
 #   .build_value_map()    - canonical -> data.table of integer/label pairs
 #   .build_recode_map()   - canonical -> data.table of raw/new value pairs
 #   .build_missing_map()  - canonical -> vector of numeric missing codes
+#   .build_comment_map()  - special comments if needed
 # =============================================================================
 
 
@@ -80,8 +81,11 @@
 #' @keywords internal
 .normalise_alias <- function(x) {
   x <- tolower(x)
-  x <- gsub("[^a-z0-9]+", "_", x)
-  gsub("^_+|_+$", "", x)
+
+  ## # Deactivate coz some columnames have [] and should be kept as it's
+  #   x <- gsub("[^a-z0-9]+", "_", x)
+  #   gsub("^_+|_+$", "", x)
+return(x)
 }
 
 
@@ -259,6 +263,23 @@
   stats::setNames(maps, names(var_map))
 }
 
+# -----------------------------------------------------------------------------
+# .build_comment_map()
+# -----------------------------------------------------------------------------
+#'
+#' Build the canonical for comment 
+#'
+#' Reads the `comment:` field for each variable if available. It's just for
+#' notes and not be used in data cleaning
+#'
+#' @param var_map Parsed YAML list.
+#' @return Named character vector: names are canonicals. 
+#' @keywords internal
+.build_comment_map <- function(var_map) {
+  sapply(names(var_map), function(canonical) {
+    var_map[[canonical]]$comment
+  })
+}
 
 # -----------------------------------------------------------------------------
 # load_config()   [PUBLIC]
@@ -307,6 +328,7 @@ load_config <- function(config_file = "config/variable_map.yml") {
       value_map        = .build_value_map(var_map),
       missing_map      = .build_missing_map(var_map),
       type_map         = .build_type_map(var_map),
+      comment_map      = .build_comment_map(var_map),
       var_map          = var_map
     ),
     class = "cc_config"
