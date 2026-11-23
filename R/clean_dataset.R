@@ -44,9 +44,9 @@
 .normalise_colnames <- function(dt) {
   old <- names(dt)
   new <- tolower(old)
-  new <- gsub("[^a-z0-9]+", "_", new)
-  new <- gsub("^_+|_+$", "", new)
-  new <- make.unique(new, sep = "_")
+#   new <- gsub("[^a-z0-9]+", "_", new)
+#   new <- gsub("^_+|_+$", "", new)
+#   new <- make.unique(new, sep = "_")
   data.table::setnames(dt, old, new)
   dt
 }
